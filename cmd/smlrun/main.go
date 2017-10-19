@@ -1,4 +1,4 @@
-package smlrun
+package main
 
 import (
 	"shanhu.io/aries/sitter"

@@ -1,4 +1,4 @@
-package smlkeygen
+package main
 
 import (
 	"flag"

@@ -1,4 +1,4 @@
-package smlctrl
+package main
 
 import (
 	"shanhu.io/aries/smlctrl"

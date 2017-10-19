@@ -1,4 +1,4 @@
-package sitter
+package main
 
 import "shanhu.io/aries/sitter"
 
