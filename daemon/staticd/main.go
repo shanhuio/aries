@@ -1,4 +1,4 @@
-package staticd
+package main
 
 import (
 	"shanhu.io/aries/static"

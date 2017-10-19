@@ -1,5 +1,5 @@
-// Command smlfront is the front end reverse proxy for smallrepo websites.
-package valetd
+// valetd is the front end reverse proxy for smallrepo websites.
+package main
 
 import (
 	"shanhu.io/aries/valet"
