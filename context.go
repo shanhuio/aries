@@ -1,10 +1,8 @@
 package aries
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 )
@@ -28,14 +26,6 @@ type C struct {
 // Redirect redirects the request to another URL.
 func (c *C) Redirect(url string) {
 	http.Redirect(c.Resp, c.Req, url, http.StatusFound)
-}
-
-// RespondJSON respond the request with a JSON object.
-func (c *C) RespondJSON(dat interface{}) {
-	enc := json.NewEncoder(c.Resp)
-	if err := enc.Encode(dat); err != nil {
-		log.Println(err)
-	}
 }
 
 // ReadCookie reads the cookie from the context.

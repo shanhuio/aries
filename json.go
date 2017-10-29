@@ -11,7 +11,7 @@ func ReplyJSON(c *C, v interface{}) error {
 	bs, err := json.Marshal(v)
 	if err != nil {
 		log.Println(err)
-		http.Error(c.Resp, "respond encode error", 400)
+		http.Error(c.Resp, "respond encode error", 500)
 		return err
 	}
 
