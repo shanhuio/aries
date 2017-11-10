@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
+	"shanhu.io/misc/pathutil"
 )
 
 func charsetReader(charset string, r io.Reader) (io.Reader, error) {
@@ -66,7 +68,7 @@ func ParseGoImport(r io.Reader, pkg string) (*Repo, error) {
 		}
 
 		repoPath := fields[0]
-		if !isRepoPkg(repoPath, pkg) {
+		if !pathutil.IsParent(repoPath, pkg) {
 			continue
 		}
 

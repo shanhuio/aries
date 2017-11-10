@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+
+	"shanhu.io/misc/pathutil"
 )
 
 func get(c *http.Client, pkg string) (*Repo, error) {
@@ -60,7 +62,7 @@ func getRepo(c *http.Client, pkg string) (*Repo, error) {
 
 // GetRepo gets the repo meta data for a particular package.
 func GetRepo(c *http.Client, pkg string) (*Repo, error) {
-	parts, err := splitPkgName(pkg)
+	parts, err := pathutil.Split(pkg)
 	if err != nil {
 		return nil, err
 	}
