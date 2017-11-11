@@ -29,8 +29,8 @@ func (h *Handler) ListenAndServe(addr string) error {
 	return s.ListenAndServe()
 }
 
-// HandleFunc a context serving function into a context serving function.
-func HandleFunc(f Func, https bool) http.HandlerFunc {
+// HandlerFunc wraps a context serving function into an HTTP handler function.
+func HandlerFunc(f Func, https bool) http.HandlerFunc {
 	h := &Handler{
 		Func:  f,
 		HTTPS: https,

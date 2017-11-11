@@ -2,6 +2,7 @@ package aries
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 )
 
@@ -99,4 +100,19 @@ func (m *Mux) Serve(c *C) bool {
 	}
 	f(c)
 	return true
+}
+
+// Func returns the handler Func of this mux,
+func (m *Mux) Func() Func {
+	return func(c *C) {
+		if m.Serve(c) {
+			return
+		}
+		c.ErrorStr(404, "nothing here")
+	}
+}
+
+// HandlerFunc returns the HTTP handler function of this mux.
+func (m *Mux) HandlerFunc(https bool) http.HandlerFunc {
+	return HandlerFunc(m.Func(), https)
 }
