@@ -23,6 +23,15 @@ type RSACertConfig struct {
 	Bits     int
 }
 
+// NewCACert creates a CA cert for the given domain.
+func NewCACert(domain string) (*Cert, error) {
+	c := &RSACertConfig{
+		Hosts: []string{domain},
+		IsCA:  true,
+	}
+	return MakeRSACert(c)
+}
+
 func (c *RSACertConfig) start() time.Time {
 	if c.Start != nil {
 		return *c.Start
