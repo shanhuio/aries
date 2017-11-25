@@ -1,0 +1,18 @@
+sudo: false
+language: go
+go_import_path: shanhu.io/aries
+
+go:
+    - 1.9
+
+install:
+    - go get ./...
+    - go get shanhu.io/tools/cmd/smlchk
+    - go get github.com/golang/lint/golint
+
+script:
+    - test -z `gofmt -s -l .`
+    - go test ./...
+    - smlchk -path="shanhu.io/aries"
+    - golint ./...
+    - go vet ./...
