@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strings"
 
 	"shanhu.io/misc/pathutil"
 )
@@ -81,6 +82,17 @@ func GetRepo(c *http.Client, pkg string) (*Repo, error) {
 			VCS:        "git",
 			VCSRoot:    "https://" + repoPath,
 		}, nil
+	}
+
+	for i, part := range parts {
+		if strings.HasSuffix(part, ".git") {
+			repoPath := path.Join(parts[:i+1]...)
+			return &Repo{
+				ImportRoot: repoPath,
+				VCS:        "git",
+				VCSRoot:    "https://" + repoPath,
+			}, nil
+		}
 	}
 
 	return get(c, pkg)
