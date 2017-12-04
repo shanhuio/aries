@@ -37,3 +37,18 @@ func NewGitHubMux(domain, user string, repos []string) *aries.Mux {
 	}
 	return NewGitMux(domain, m)
 }
+
+// ServeGoGet will serve the request if it contains "go-get" in the query.
+// It returns true when it is served, and false if it is not.
+func ServeGoGet(mux *aries.Mux, c *aries.C) bool {
+	query := c.Req.URL.Query()
+	if _, ok := query["go-get"]; !ok {
+		return false
+	}
+
+	if mux.Serve(c) {
+		return true
+	}
+	http.Error(c.Resp, "nothing here", 404)
+	return true
+}
