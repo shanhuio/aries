@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"shanhu.io/aries/oauth"
-	"shanhu.io/misc/httputil"
 	"shanhu.io/misc/signer"
+	"smallrepo.com/base/httputil"
 )
 
 // LoginWithKey uses the given PEM file to login a server, and returns the creds

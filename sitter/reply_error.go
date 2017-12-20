@@ -3,7 +3,7 @@ package sitter
 import (
 	"net/http"
 
-	"shanhu.io/misc/httputil"
+	"smallrepo.com/base/httputil"
 )
 
 func replyError(w http.ResponseWriter, err error) bool {

@@ -3,7 +3,7 @@ package smlctrl
 import (
 	"flag"
 
-	"shanhu.io/misc/httputil"
+	"smallrepo.com/base/httputil"
 )
 
 func newFlags() *flag.FlagSet {

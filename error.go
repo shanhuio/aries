@@ -3,7 +3,7 @@ package aries
 import (
 	"net/http"
 
-	"shanhu.io/misc/httputil"
+	"smallrepo.com/base/httputil"
 )
 
 // AltError is a short hand to httputil.AltError
