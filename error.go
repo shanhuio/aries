@@ -22,6 +22,6 @@ func AltInternal(err error, s string) error {
 }
 
 // AltInvalidArg logs the error and returns an alternative invalid arg error.
-func (c *C) AltInvalidArg(err error, s string) error {
+func AltInvalidArg(err error, s string) error {
 	return AltError(err, errcode.InvalidArg, s)
 }
