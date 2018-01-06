@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"crypto/rsa"
+	"errors"
 	"fmt"
 
 	"golang.org/x/crypto/ssh"
@@ -22,6 +23,8 @@ type Creds struct {
 	Expires int64 // nanosecond timestamp
 }
 
+var errNotRSA = errors.New("public key is not an RSA key")
+
 func unmarshalPublicKey(bs []byte) (*rsa.PublicKey, error) {
 	if len(bs) == 0 {
 		return nil, fmt.Errorf("public key not present")
@@ -30,13 +33,18 @@ func unmarshalPublicKey(bs []byte) (*rsa.PublicKey, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	if k.Type() != "ssh-rsa" {
-		return nil, fmt.Errorf("public key is not an RSA key")
+		return nil, errNotRSA
 	}
 	ck, ok := k.(ssh.CryptoPublicKey)
 	if !ok {
-		return nil, fmt.Errorf("public key is not an RSA key")
+		return nil, errNotRSA
 	}
 
-	return ck.CryptoPublicKey().(*rsa.PublicKey), nil
+	ret, ok := ck.CryptoPublicKey().(*rsa.PublicKey)
+	if !ok {
+		return nil, errNotRSA
+	}
+	return ret, nil
 }
