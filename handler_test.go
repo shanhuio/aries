@@ -23,7 +23,10 @@ func httpGetString(c *http.Client, url string) (string, error) {
 
 func TestHandler(t *testing.T) {
 	msg := "hello"
-	f := func(c *C) { fmt.Fprint(c.Resp, msg) }
+	f := func(c *C) error {
+		fmt.Fprint(c.Resp, msg)
+		return nil
+	}
 	s := httptest.NewServer(HandlerFunc(f, false))
 	defer s.Close()
 
@@ -39,7 +42,10 @@ func TestHandler(t *testing.T) {
 
 func TestHTTPSHandler(t *testing.T) {
 	msg := "hello"
-	f := func(c *C) { fmt.Fprint(c.Resp, msg) }
+	f := func(c *C) error {
+		fmt.Fprint(c.Resp, msg)
+		return nil
+	}
 	s := httptest.NewTLSServer(HandlerFunc(f, false))
 	defer s.Close()
 

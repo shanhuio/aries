@@ -1,9 +1,11 @@
 package oauth
 
 import (
+	"log"
 	"time"
 
 	"shanhu.io/aries"
+	"shanhu.io/misc/errcode"
 	"shanhu.io/misc/signer"
 )
 
@@ -61,38 +63,40 @@ func NewModule(c *Config) *Module {
 func (mod *Module) Mux() *aries.Mux {
 	m := aries.NewMux()
 	if mod.c.ByPass != "" {
-		m.Exact("/signin-bypass", func(c *aries.C) {
+		m.Exact("/signin-bypass", func(c *aries.C) error {
 			mod.SetupCookie(c, mod.c.ByPass)
 			mod.signInRedirect(c)
+			return nil
 		})
 	}
 
-	m.Exact("/signout", func(c *aries.C) {
+	m.Exact("/signout", func(c *aries.C) error {
 		c.ClearCookie("session")
 		c.Redirect(mod.redirect)
+		return nil
 	})
 
 	if mod.c.KeyStore != nil {
-		m.Exact("/pubkey/signin", func(c *aries.C) {
+		m.Exact("/pubkey/signin", func(c *aries.C) error {
 			req := new(LoginRequest)
-			if err := aries.UnmarshalJSONBody(c, req); c.Error(500, err) {
-				return
+			if err := aries.UnmarshalJSONBody(c, req); err != nil {
+				return err
 			}
 
 			keyBytes, err := mod.c.KeyStore.Key(req.User)
-			if c.Error(500, err) {
-				return
+			if err != nil {
+				return err
 			}
 
 			k, err := unmarshalPublicKey(keyBytes)
-			if c.Error(500, err) {
-				return
+			if err != nil {
+				return err
 			}
 
 			const loginCredsWindow = time.Minute * 5
 			sig := signer.NewRSATimeSigner(k, loginCredsWindow)
-			if c.Error(403, sig.Check(req.SignedTime)) {
-				return
+			if err := sig.Check(req.SignedTime); err != nil {
+				return errcode.Add(errcode.Unauthorized, err)
 			}
 
 			session, expires := mod.NewCreds(req.User)
@@ -101,37 +105,39 @@ func (mod *Module) Mux() *aries.Mux {
 				Token:   session,
 				Expires: expires.UnixNano(),
 			}
-			aries.ReplyJSON(c, resp)
+			return aries.ReplyJSON(c, resp)
 		})
 	}
 
 	if mod.github != nil {
-		m.Exact("/github/signin", func(c *aries.C) {
+		m.Exact("/github/signin", func(c *aries.C) error {
 			c.Redirect(mod.github.signInURL())
+			return nil
 		})
 
-		m.Exact("/github/callback", func(c *aries.C) {
+		m.Exact("/github/callback", func(c *aries.C) error {
 			user, err := mod.github.callback(c.Req)
 			if err != nil {
-				c.AltError(err, 500, "callback failed")
-				return
+				log.Println("github callback: ", err)
+				return errcode.Internalf("callback failed")
 			}
-			mod.signIn(c, "github", user)
+			return mod.signIn(c, "github", user)
 		})
 	}
 
 	if mod.google != nil {
-		m.Exact("/google/signin", func(c *aries.C) {
+		m.Exact("/google/signin", func(c *aries.C) error {
 			c.Redirect(mod.google.signInURL())
+			return nil
 		})
 
-		m.Exact("/google/callback", func(c *aries.C) {
+		m.Exact("/google/callback", func(c *aries.C) error {
 			user, err := mod.google.callback(c.Req)
 			if err != nil {
-				c.AltError(err, 500, "callback failed")
-				return
+				log.Println("google callback: ", err)
+				return errcode.Internalf("callback failed")
 			}
-			mod.signIn(c, "google", user)
+			return mod.signIn(c, "google", user)
 		})
 	}
 
@@ -155,16 +161,20 @@ func (mod *Module) signInRedirect(c *aries.C) {
 	c.Redirect(mod.redirect)
 }
 
-func (mod *Module) signIn(c *aries.C, method, user string) {
+func (mod *Module) signIn(c *aries.C, method, user string) error {
 	if mod.c.LoginCheck == nil {
-		return
+		return nil
 	}
 
-	id := mod.c.LoginCheck(c, method, user)
+	id, err := mod.c.LoginCheck(c, method, user)
+	if err != nil {
+		return err
+	}
 	if id != "" {
 		mod.SetupCookie(c, id)
 		mod.signInRedirect(c)
 	}
+	return nil
 }
 
 func (mod *Module) checkUser(c *aries.C) (valid, needRefresh bool) {

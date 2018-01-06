@@ -2,13 +2,13 @@ package valet
 
 import (
 	"fmt"
-	"net/http"
 	"path/filepath"
 	"time"
 
 	"shanhu.io/aries"
 	"shanhu.io/aries/oauth"
 	"shanhu.io/aries/sitter"
+	"shanhu.io/misc/errcode"
 )
 
 // the controller server
@@ -19,22 +19,23 @@ type control struct {
 	apiMux   *aries.Mux
 }
 
-func (s *control) f(f func(s *control, c *aries.C)) func(c *aries.C) {
-	return func(c *aries.C) { f(s, c) }
+func (s *control) f(f func(s *control, c *aries.C) error) aries.Func {
+	return func(c *aries.C) error { return f(s, c) }
 }
 
-func serveIndex(s *control, c *aries.C) {
+func serveIndex(s *control, c *aries.C) error {
 	fmt.Fprint(c.Resp, "controller")
+	return nil
 }
 
-func serveDeploy(s *control, c *aries.C) {
+func serveDeploy(s *control, c *aries.C) error {
 	var req struct {
 		Name string
 	}
 
 	err := aries.UnmarshalJSONBody(c, &req)
-	if c.Error(400, err) {
-		return
+	if err != nil {
+		return err
 	}
 
 	dir := filepath.Join("/prod", req.Name, "pkg")
@@ -42,6 +43,7 @@ func serveDeploy(s *control, c *aries.C) {
 	if err := sitter.Push(dir, server, c.Resp); err != nil {
 		fmt.Fprintf(c.Resp, "error: %s\n", err)
 	}
+	return nil
 }
 
 func makeAPIMux(s *control) *aries.Mux {
@@ -71,20 +73,20 @@ func makeControl(c *Config) aries.Func {
 	return s.f(serveControl)
 }
 
-func serveControl(s *control, c *aries.C) {
-	if s.oauthMux.Serve(c) {
-		return
+func serveControl(s *control, c *aries.C) error {
+	if hit, err := s.oauthMux.Serve(c); hit {
+		return err
 	}
 	s.oauth.Check(c)
 
 	if c.User == "" {
 		fmt.Fprintln(c.Resp, randomMotto())
-		return
+		return nil
 	}
 
-	if s.apiMux.Serve(c) {
-		return
+	if hit, err := s.apiMux.Serve(c); hit {
+		return err
 	}
 
-	http.Error(c.Resp, "nothing found here", 404)
+	return errcode.NotFoundf("nothing here")
 }

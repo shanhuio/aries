@@ -11,13 +11,8 @@ type Handler struct {
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	h.Func(&C{
-		Path:  req.URL.Path,
-		Resp:  w,
-		Req:   req,
-		HTTPS: h.HTTPS,
-		Data:  make(map[string]interface{}),
-	})
+	c := NewContext(w, req, h.HTTPS)
+	c.ErrCode(h.Func(c))
 }
 
 // ListenAndServe launches the handler as an HTTP service.

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"shanhu.io/aries"
+	"shanhu.io/misc/errcode"
 )
 
 // Repo is a Golang repository that this handler will handle.
@@ -48,11 +49,16 @@ func (r *Repo) MetaContent() string {
 }
 
 func (r *Repo) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	path := strings.TrimSuffix(host(r.ImportRoot)+req.URL.Path, "/")
+	c := aries.NewContext(w, req, false)
+	c.ErrCode(r.Serve(c))
+}
+
+// Serve serves the incomiing webapp request.
+func (r *Repo) Serve(c *aries.C) error {
+	path := strings.TrimSuffix(host(r.ImportRoot)+c.Req.URL.Path, "/")
 
 	if !strings.HasPrefix(path, r.ImportRoot) {
-		http.NotFound(w, req)
-		return
+		return errcode.NotFoundf("repo not found", path)
 	}
 
 	d := &data{
@@ -64,13 +70,8 @@ func (r *Repo) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	buf := new(bytes.Buffer)
 	if err := tmpl.Execute(buf, d); err != nil {
-		http.Error(w, err.Error(), 500)
-		return
+		return err
 	}
-	w.Write(buf.Bytes())
-}
-
-// Serve serves the incomiing webapp request.
-func (r *Repo) Serve(c *aries.C) {
-	r.ServeHTTP(c.Resp, c.Req)
+	c.Resp.Write(buf.Bytes())
+	return nil
 }

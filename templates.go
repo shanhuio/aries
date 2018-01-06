@@ -3,8 +3,9 @@ package aries
 import (
 	"html/template"
 	"log"
-	"net/http"
 	"path/filepath"
+
+	"shanhu.io/misc/errcode"
 )
 
 // Templates is a collection of templates.
@@ -22,14 +23,14 @@ func (ts *Templates) tmpl(f string) string {
 }
 
 // Serve serves a webapp session with a particular template.
-func (ts *Templates) Serve(c *C, p string, dat interface{}) {
+func (ts *Templates) Serve(c *C, p string, dat interface{}) error {
 	t, err := template.ParseFiles(ts.tmpl(p))
 	if err != nil {
 		log.Println(err)
-		http.Error(c.Resp, "page not found", 404)
-		return
+		return errcode.NotFoundf("page not found")
 	}
 	if err := t.Execute(c.Resp, dat); err != nil {
 		log.Println(err)
 	}
+	return nil
 }

@@ -33,10 +33,11 @@ func (s *StaticFiles) CacheAge(ageSecs int) {
 }
 
 // Serve serves incoming HTTP requests.
-func (s *StaticFiles) Serve(c *C) {
+func (s *StaticFiles) Serve(c *C) error {
 	c.Req.URL.Path = c.Path
 	if s.cacheControl != "" {
 		c.Resp.Header().Add("Cache-Control", s.cacheControl)
 	}
 	s.h.ServeHTTP(c.Resp, c.Req)
+	return nil
 }

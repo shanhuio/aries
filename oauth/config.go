@@ -22,7 +22,7 @@ type Config struct {
 	KeyStore KeyStore
 
 	// Exchanges Oauth2 ID's for user ID.
-	LoginCheck func(c *aries.C, method, id string) string
+	LoginCheck func(c *aries.C, method, id string) (string, error)
 
 	// Fetches the user account structure.
 	Check func(user string) (interface{}, bool)

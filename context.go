@@ -1,10 +1,10 @@
 package aries
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
 	"time"
+
+	"shanhu.io/misc/errcode"
 )
 
 // C provides the request context for a web application.
@@ -21,6 +21,17 @@ type C struct {
 	HTTPS bool
 
 	Data map[string]interface{}
+}
+
+// NewContext creates a new context from the incomming request.
+func NewContext(w http.ResponseWriter, req *http.Request, isHTTPS bool) *C {
+	return &C{
+		Path:  req.URL.Path,
+		Resp:  w,
+		Req:   req,
+		HTTPS: isHTTPS,
+		Data:  make(map[string]interface{}),
+	}
 }
 
 // Redirect redirects the request to another URL.
@@ -60,34 +71,30 @@ func (c *C) ClearCookie(name string) {
 	http.SetCookie(c.Resp, cookie)
 }
 
-// ErrorStr returns an error to the request.
-func (c *C) ErrorStr(code int, s string) {
-	c.Error(code, errors.New(s))
+// ErrCode returns an error based on its error code.
+func (c *C) ErrCode(err error) bool {
+	if err == nil {
+		return false
+	}
+	code := errcode.Of(err)
+	switch code {
+	case errcode.NotFound:
+		return c.replyError(404, err)
+	case errcode.Internal:
+		return c.replyError(500, err)
+	case errcode.Unauthorized:
+		return c.replyError(403, err)
+	case errcode.InvalidArg:
+		return c.replyError(400, err)
+	}
+	return c.replyError(500, err)
 }
 
-// Errorf creates a formatted error and sends it to the client
-// as a 500 error message.
-func (c *C) Errorf(code int, f string, args ...interface{}) {
-	c.Error(code, fmt.Errorf(f, args...))
-}
-
-// Error responds with a 500 error with the error message if err is not
-// nil.
-func (c *C) Error(code int, err error) bool {
+func (c *C) replyError(code int, err error) bool {
 	if err == nil {
 		return false
 	}
 	http.Error(c.Resp, err.Error(), code)
-	return true
-}
-
-// AltError responds with an error with alternative error meesage if err is not
-// nil.
-func (c *C) AltError(err error, code int, s string) bool {
-	if err == nil {
-		return false
-	}
-	AltError(c.Resp, err, s, code)
 	return true
 }
 
