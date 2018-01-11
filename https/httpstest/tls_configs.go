@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"net/http"
 
 	"shanhu.io/aries/https"
 )
@@ -51,4 +52,14 @@ func NewTLSConfigs(domains []string) (*TLSConfigs, error) {
 		Server:  serverConfig,
 		Client:  &tls.Config{RootCAs: certPool},
 	}, nil
+}
+
+// SinkTransport returns a transport where every outgoing connection
+// dials the same sinkAddr but assumes the address is certified as
+// the domains in the TLSConfigs.
+func (c *TLSConfigs) SinkTransport(sinkAddr string) *http.Transport {
+	return &http.Transport{
+		DialContext:     sink(sinkAddr),
+		TLSClientConfig: c.Client,
+	}
 }

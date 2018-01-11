@@ -39,11 +39,8 @@ func NewServer(domains []string, h http.Handler) (*Server, error) {
 	serverHost := serverURL.Host
 
 	return &Server{
-		Host:   serverHost,
-		Server: server,
-		Transport: &http.Transport{
-			DialContext:     sink(serverHost),
-			TLSClientConfig: c.Client,
-		},
+		Host:      serverHost,
+		Server:    server,
+		Transport: c.SinkTransport(serverHost),
 	}, nil
 }
