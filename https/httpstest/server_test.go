@@ -19,6 +19,16 @@ func checkBody(t *testing.T, resp *http.Response, msg string) {
 	}
 }
 
+func checkGet(t *testing.T, c *http.Client, url, msg string) {
+	resp, err := c.Get(url)
+	if err != nil {
+		t.Fatalf("get %s: %s", url, msg)
+	}
+	defer resp.Body.Close()
+
+	checkBody(t, resp, msg)
+}
+
 func TestServer(t *testing.T) {
 	const msg = "hello"
 	s, err := NewServer(
@@ -55,19 +65,6 @@ func TestDualServer(t *testing.T) {
 	}
 
 	c := s.Client()
-	resp1, err := c.Get("https://test.shanhu.io")
-	if err != nil {
-		t.Fatalf("get: %s", err)
-	}
-	defer resp1.Body.Close()
-
-	checkBody(t, resp1, msg)
-
-	resp2, err := c.Get("http://test.shanhu.io")
-	if err != nil {
-		t.Fatalf("get: %s", err)
-	}
-	defer resp2.Body.Close()
-
-	checkBody(t, resp2, msg)
+	checkGet(t, c, "https://test.shanhu.io", msg)
+	checkGet(t, c, "http://test.shanhu.io", msg)
 }
