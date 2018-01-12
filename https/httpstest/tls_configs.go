@@ -54,12 +54,22 @@ func NewTLSConfigs(domains []string) (*TLSConfigs, error) {
 	}, nil
 }
 
-// SinkTransport returns a transport where every outgoing connection
-// dials the same sinkAddr but assumes the address is certified as
-// the domains in the TLSConfigs.
-func (c *TLSConfigs) SinkTransport(sinkAddr string) *http.Transport {
+// Sink returns a transport where every outgoing connection dials the same
+// sinkAddr but assumes the address is certified as the domains in the
+// TLSConfigs.
+func (c *TLSConfigs) Sink(sinkAddr string) *http.Transport {
 	return &http.Transport{
 		DialContext:     sink(sinkAddr),
+		TLSClientConfig: c.Client,
+	}
+}
+
+// SinkHTTPS returns a transport where outgoing https connections dial httpsAddr
+// and all other outgoing connections dial httpAddr. When it is HTTPS, it
+// assumes the address is certified as the domains in TLSConfigs.
+func (c *TLSConfigs) SinkHTTPS(httpAddr, httpsAddr string) *http.Transport {
+	return &http.Transport{
+		DialContext:     sinkHTTPS(httpAddr, httpsAddr),
 		TLSClientConfig: c.Client,
 	}
 }

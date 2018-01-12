@@ -34,6 +34,6 @@ func NewServer(domains []string, h http.Handler) (*Server, error) {
 	return &Server{
 		Host:      serverHost,
 		Server:    server,
-		Transport: c.SinkTransport(serverHost),
+		Transport: c.Sink(serverHost),
 	}, nil
 }
