@@ -1,6 +1,7 @@
 package aries
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -10,8 +11,17 @@ type Handler struct {
 	HTTPS bool
 }
 
+func okHandler(c *C) error {
+	fmt.Fprint(c.Resp, "ok")
+	return nil
+}
+
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	c := NewContext(w, req, h.HTTPS)
+	if c.Path == "/ok" {
+		c.ErrCode(okHandler(c))
+		return
+	}
 	c.ErrCode(h.Func(c))
 }
 
