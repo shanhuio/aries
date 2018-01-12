@@ -1,10 +1,8 @@
 package httpstest
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 )
 
 // Server wraps a *httptest.Server with HTTP support.
@@ -32,12 +30,7 @@ func NewServer(domains []string, h http.Handler) (*Server, error) {
 	server.TLS = c.Server
 	server.StartTLS()
 
-	serverURL, err := url.Parse(server.URL)
-	if err != nil {
-		return nil, fmt.Errorf("invalid server URL: %s", err)
-	}
-	serverHost := serverURL.Host
-
+	serverHost := server.Listener.Addr().String()
 	return &Server{
 		Host:      serverHost,
 		Server:    server,
