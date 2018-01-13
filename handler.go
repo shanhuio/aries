@@ -6,7 +6,7 @@ import (
 )
 
 // Handler implements the standard http interface.
-type Handler struct { Func }
+type Handler struct{ Func }
 
 func okHandler(c *C) error {
 	fmt.Fprint(c.Resp, "ok")
