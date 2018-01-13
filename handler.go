@@ -6,10 +6,7 @@ import (
 )
 
 // Handler implements the standard http interface.
-type Handler struct {
-	Func
-	HTTPS bool
-}
+type Handler struct { Func }
 
 func okHandler(c *C) error {
 	fmt.Fprint(c.Resp, "ok")
@@ -17,7 +14,7 @@ func okHandler(c *C) error {
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	c := NewContext(w, req, h.HTTPS)
+	c := NewContext(w, req)
 	if c.Path == "/ok" {
 		c.ErrCode(okHandler(c))
 		return
@@ -37,8 +34,7 @@ func (h *Handler) ListenAndServe(addr string) error {
 // HandlerFunc wraps a context serving function into an HTTP handler function.
 func HandlerFunc(f Func, https bool) http.HandlerFunc {
 	h := &Handler{
-		Func:  f,
-		HTTPS: https,
+		Func: f,
 	}
 	return h.ServeHTTP
 }

@@ -49,7 +49,7 @@ func (r *Repo) MetaContent() string {
 }
 
 func (r *Repo) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	c := aries.NewContext(w, req, false)
+	c := aries.NewContext(w, req)
 	c.ErrCode(r.Serve(c))
 }
 

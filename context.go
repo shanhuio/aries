@@ -2,6 +2,7 @@ package aries
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"shanhu.io/misc/errcode"
@@ -24,9 +25,18 @@ type C struct {
 }
 
 // NewContext creates a new context from the incomming request.
-func NewContext(w http.ResponseWriter, req *http.Request, isHTTPS bool) *C {
+func NewContext(w http.ResponseWriter, req *http.Request) *C {
+	isHTTPS := false
+	u := req.URL
+	if strings.ToLower(u.Scheme) == "https" {
+		isHTTPS = true
+	}
+	if strings.ToLower(req.Header.Get("X-Forwared-Proto")) == "https" {
+		isHTTPS = true
+	}
+
 	return &C{
-		Path:  req.URL.Path,
+		Path:  u.Path,
 		Resp:  w,
 		Req:   req,
 		HTTPS: isHTTPS,
