@@ -2,7 +2,6 @@ package aries
 
 import (
 	"fmt"
-	"net/http"
 	"strings"
 
 	"shanhu.io/misc/errcode"
@@ -112,9 +111,4 @@ func (m *Mux) Func() Func {
 		}
 		return errcode.NotFoundf("nothing here")
 	}
-}
-
-// HandlerFunc returns the HTTP handler function of this mux.
-func (m *Mux) HandlerFunc(https bool) http.HandlerFunc {
-	return HandlerFunc(m.Func(), https)
 }

@@ -21,13 +21,13 @@ func httpGetString(c *http.Client, url string) (string, error) {
 	return string(bs), nil
 }
 
-func TestHandler(t *testing.T) {
+func TestFunc(t *testing.T) {
 	msg := "hello"
 	f := func(c *C) error {
 		fmt.Fprint(c.Resp, msg)
 		return nil
 	}
-	s := httptest.NewServer(HandlerFunc(f, false))
+	s := httptest.NewServer(Func(f))
 	defer s.Close()
 
 	got, err := httpGetString(s.Client(), s.URL)
@@ -40,13 +40,13 @@ func TestHandler(t *testing.T) {
 	}
 }
 
-func TestHTTPSHandler(t *testing.T) {
+func TestFuncHTTPS(t *testing.T) {
 	msg := "hello"
 	f := func(c *C) error {
 		fmt.Fprint(c.Resp, msg)
 		return nil
 	}
-	s := httptest.NewTLSServer(HandlerFunc(f, false))
+	s := httptest.NewTLSServer(Func(f))
 	defer s.Close()
 
 	got, err := httpGetString(s.Client(), s.URL)
