@@ -30,3 +30,8 @@ func (f Func) ListenAndServe(addr string) error {
 	}
 	return s.ListenAndServe()
 }
+
+// ListenAndServe launches the handler as an HTTP service.
+func ListenAndServe(addr string, f Func) error {
+	return f.ListenAndServe(addr)
+}
