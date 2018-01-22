@@ -55,7 +55,7 @@ func (s *MuxSet) Serve(c *C) (bool, error) {
 // ServeInternal serves the incoming request with the mux set, but only serves
 // resource for normal users, and allows only admins (users with positive
 // level) to visit the guest mux.
-func (s *MuxSet) ServeInternal(c *C, signIn Func) (bool, error) {
+func (s *MuxSet) ServeInternal(c *C) (bool, error) {
 	if hit, err := serveMux(s.Auth, c); hit {
 		return true, err
 	}
