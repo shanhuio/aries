@@ -201,7 +201,9 @@ func (mod *Module) checkUser(c *aries.C) (valid, needRefresh bool) {
 
 	c.User = user
 	c.UserLevel = lvl
-	c.Data["user"] = u
+	if u != nil {
+		c.Data["user"] = u
+	}
 	return true, needRefresh
 }
 

@@ -36,6 +36,13 @@ func (c *JSONConfig) Config() *Config {
 func (c *JSONConfig) GitHubBasedConfig() *Config {
 	ret := c.Config()
 	ret.LoginCheck = MapGitHub
+	ret.Check = func(name string) (interface{}, int) {
+		_, isAdmin := c.PublicKeys[name]
+		if isAdmin {
+			return nil, 1
+		}
+		return nil, 0
+	}
 	return ret
 }
 
