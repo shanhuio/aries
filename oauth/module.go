@@ -190,6 +190,7 @@ func (mod *Module) checkUser(c *aries.C) (valid, needRefresh bool) {
 	user := string(bs)
 	if mod.c.Check == nil {
 		c.User = user
+		c.UserLevel = 0
 		return true, needRefresh
 	}
 
