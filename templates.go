@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"shanhu.io/misc/errcode"
+	"shanhu.io/misc/strutil"
 )
 
 // Templates is a collection of templates.
@@ -13,8 +14,12 @@ type Templates struct {
 	path string
 }
 
+// DefaultTemplatePath is the default template path.
+const DefaultTemplatePath = "_/tmpl"
+
 // NewTemplates creates a collection of templates in a particular folder.
 func NewTemplates(p string) *Templates {
+	p = strutil.Default(DefaultTemplatePath, "_/tmpl")
 	return &Templates{path: p}
 }
 

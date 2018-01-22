@@ -3,6 +3,8 @@ package aries
 import (
 	"fmt"
 	"net/http"
+
+	"shanhu.io/misc/strutil"
 )
 
 // StaticFiles is a module that serves static files.
@@ -11,12 +13,16 @@ type StaticFiles struct {
 	h            http.Handler
 }
 
+// DefaultStaticPath is the default path for static files.
+const DefaultStaticPath = "_/static"
+
 func cacheControl(ageSecs int) string {
 	return fmt.Sprintf("max-age=%d; must-revalidate", ageSecs)
 }
 
 // NewStaticFiles creates a module that serves static files.
 func NewStaticFiles(p string) *StaticFiles {
+	p = strutil.Default(DefaultStaticPath, "_/static")
 	return &StaticFiles{
 		cacheControl: cacheControl(10),
 		h:            http.FileServer(http.Dir(p)),
