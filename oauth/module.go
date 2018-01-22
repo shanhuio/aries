@@ -193,12 +193,13 @@ func (mod *Module) checkUser(c *aries.C) (valid, needRefresh bool) {
 		return true, needRefresh
 	}
 
-	u, ok := mod.c.Check(user)
-	if !ok {
+	u, lvl := mod.c.Check(user)
+	if lvl < 0 {
 		return false, false
 	}
 
 	c.User = user
+	c.UserLevel = lvl
 	c.Data["user"] = u
 	return true, needRefresh
 }

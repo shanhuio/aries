@@ -10,8 +10,9 @@ import (
 
 // C provides the request context for a web application.
 type C struct {
-	Path string
-	User string
+	Path      string
+	User      string
+	UserLevel int
 
 	App     string
 	AppPath string
