@@ -222,3 +222,6 @@ func (mod *Module) Check(c *aries.C) bool {
 	}
 	return ok
 }
+
+// AuthSetup setups the user authorization context.
+func (mod *Module) AuthSetup(c *aries.C) { mod.Check(c) }

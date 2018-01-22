@@ -7,7 +7,7 @@ import (
 // MuxSet is a set of muxes that
 type MuxSet struct {
 	Auth      *Mux
-	AuthCheck func(c *C)
+	AuthSetup func(c *C)
 
 	Resource *Mux
 	Guest    *Mux
@@ -32,8 +32,8 @@ func (s *MuxSet) Serve(c *C) (bool, error) {
 	if hit, err := serveMux(s.Auth, c); hit {
 		return true, err
 	}
-	if s.AuthCheck != nil {
-		s.AuthCheck(c)
+	if s.AuthSetup != nil {
+		s.AuthSetup(c)
 	}
 
 	if hit, err := serveMux(s.Resource, c); hit {
@@ -59,8 +59,8 @@ func (s *MuxSet) ServeInternal(c *C) (bool, error) {
 	if hit, err := serveMux(s.Auth, c); hit {
 		return true, err
 	}
-	if s.AuthCheck != nil {
-		s.AuthCheck(c)
+	if s.AuthSetup != nil {
+		s.AuthSetup(c)
 	}
 
 	if hit, err := serveMux(s.Resource, c); hit {
