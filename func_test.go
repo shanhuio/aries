@@ -22,7 +22,7 @@ func httpGetString(c *http.Client, url string) (string, error) {
 }
 
 func TestFunc(t *testing.T) {
-	msg := "hello"
+	const msg = "hello"
 	f := func(c *C) error {
 		fmt.Fprint(c.Resp, msg)
 		return nil
@@ -41,7 +41,7 @@ func TestFunc(t *testing.T) {
 }
 
 func TestFuncHTTPS(t *testing.T) {
-	msg := "hello"
+	const msg = "hello"
 	f := func(c *C) error {
 		fmt.Fprint(c.Resp, msg)
 		return nil
