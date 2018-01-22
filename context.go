@@ -10,9 +10,10 @@ import (
 
 // C provides the request context for a web application.
 type C struct {
-	Path      string
+	Path string
+
 	User      string
-	UserLevel int
+	UserLevel int // 0 for normal user. 0 with empty User is anonymous.
 
 	App     string
 	AppPath string
