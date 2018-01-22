@@ -30,10 +30,10 @@ func (c *JSONConfig) Config() *Config {
 	}
 }
 
-// GitHubBasedConfig converts a JSON marshallable config to Config that uses
+// SimpleGitHubConfig converts a JSON marshallable config to Config that uses
 // Github as the direct user ID mapping. Users that has a public key assigned
 // in c.PublicKeys are defined as admin.
-func (c *JSONConfig) GitHubBasedConfig() *Config {
+func (c *JSONConfig) SimpleGitHubConfig() *Config {
 	ret := c.Config()
 	ret.LoginCheck = MapGitHub
 	ret.Check = func(name string) (interface{}, int) {
