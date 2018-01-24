@@ -22,7 +22,7 @@ func cacheControl(ageSecs int) string {
 
 // NewStaticFiles creates a module that serves static files.
 func NewStaticFiles(p string) *StaticFiles {
-	p = strutil.Default(DefaultStaticPath, "_/static")
+	p = strutil.Default(p, DefaultStaticPath)
 	return &StaticFiles{
 		cacheControl: cacheControl(10),
 		h:            http.FileServer(http.Dir(p)),
