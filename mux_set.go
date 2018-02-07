@@ -11,6 +11,7 @@ type MuxSet struct {
 
 	Resource Service
 	Guest    Service
+	User     Service
 	Admin    Service
 
 	InternalSignIn Func
@@ -42,7 +43,11 @@ func (s *MuxSet) Serve(c *C) error {
 	if err := serveMux(s.Guest, c); err != Miss {
 		return err
 	}
-
+	if c.User != "" {
+		if err := serveMux(s.User, c); err != Miss {
+			return err
+		}
+	}
 	if isAdmin(c) {
 		if err := serveMux(s.Admin, c); err != Miss {
 			return err
