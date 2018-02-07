@@ -58,27 +58,6 @@ func (m *Mux) Dir(s string, f Func) error {
 	return m.Prefix(s+"/", f)
 }
 
-// App adds a route for dir s, which also sets the app name and app path.
-func (m *Mux) App(s string, f Func) error {
-	if s == "" {
-		return fmt.Errorf("app name is empty")
-	}
-
-	if !strings.HasPrefix(s, "/") {
-		s = "/" + s
-	}
-	s = strings.TrimSuffix(s, "/")
-	wrap := func(c *C) error {
-		c.App = s
-		c.AppPath = strings.TrimPrefix(c.Path, s)
-		if !strings.HasPrefix(c.AppPath, "/") {
-			c.AppPath = "/" + c.AppPath
-		}
-		return f(c)
-	}
-	return m.Dir(s, wrap)
-}
-
 // Route returns the serving function for the given context.
 func (m *Mux) Route(c *C) Func {
 	if f, ok := m.exacts[c.Path]; ok {
