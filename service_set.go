@@ -4,8 +4,8 @@ import (
 	"shanhu.io/misc/errcode"
 )
 
-// MuxSet is a set of muxes that
-type MuxSet struct {
+// ServiceSet is a set of muxes that
+type ServiceSet struct {
 	Auth      Service
 	AuthSetup func(c *C)
 
@@ -29,7 +29,7 @@ func isAdmin(c *C) bool {
 }
 
 // Serve serves the incoming request with the mux set.
-func (s *MuxSet) Serve(c *C) error {
+func (s *ServiceSet) Serve(c *C) error {
 	if err := serveMux(s.Auth, c); err != Miss {
 		return err
 	}
@@ -60,7 +60,7 @@ func (s *MuxSet) Serve(c *C) error {
 // ServeInternal serves the incoming request with the mux set, but only serves
 // resource for normal users, and allows only admins (users with positive
 // level) to visit the guest mux.
-func (s *MuxSet) ServeInternal(c *C) error {
+func (s *ServiceSet) ServeInternal(c *C) error {
 	if err := serveMux(s.Auth, c); err != Miss {
 		return err
 	}
