@@ -3,8 +3,6 @@ package aries
 import (
 	"fmt"
 	"strings"
-
-	"shanhu.io/misc/errcode"
 )
 
 // Mux is a router for a given context
@@ -73,21 +71,10 @@ func (m *Mux) Route(c *C) Func {
 // Serve serves an incoming request based on c.Path.
 // It returns true when it hits something.
 // And it returns false when it hits nothing.
-func (m *Mux) Serve(c *C) (bool, error) {
+func (m *Mux) Serve(c *C) error {
 	f := m.Route(c)
 	if f == nil {
-		return false, nil
+		return Miss
 	}
-	return true, f(c)
-}
-
-// Func returns the handler Func of this mux,
-func (m *Mux) Func() Func {
-	return func(c *C) error {
-		hit, err := m.Serve(c)
-		if hit {
-			return err
-		}
-		return errcode.NotFoundf("nothing here")
-	}
+	return f(c)
 }

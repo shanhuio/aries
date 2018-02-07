@@ -25,3 +25,12 @@ func AltInternal(err error, s string) error {
 func AltInvalidArg(err error, s string) error {
 	return AltError(err, errcode.InvalidArg, s)
 }
+
+const nothingHere = "nothing here"
+
+// Miss is returned when a mux or router does not
+// hit anything in its path lookup.
+var Miss error = errcode.NotFoundf(nothingHere)
+
+// NotFound is a true not found error.
+var NotFound error = errcode.NotFoundf(nothingHere)

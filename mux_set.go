@@ -16,9 +16,9 @@ type MuxSet struct {
 	InternalSignIn Func
 }
 
-func serveMux(m *Mux, c *C) (bool, error) {
+func serveMux(m *Mux, c *C) error {
 	if m == nil {
-		return false, nil
+		return Miss
 	}
 	return m.Serve(c)
 }
@@ -28,62 +28,62 @@ func isAdmin(c *C) bool {
 }
 
 // Serve serves the incoming request with the mux set.
-func (s *MuxSet) Serve(c *C) (bool, error) {
-	if hit, err := serveMux(s.Auth, c); hit {
-		return true, err
+func (s *MuxSet) Serve(c *C) error {
+	if err := serveMux(s.Auth, c); err != Miss {
+		return err
 	}
 	if s.AuthSetup != nil {
 		s.AuthSetup(c)
 	}
 
-	if hit, err := serveMux(s.Resource, c); hit {
-		return true, err
+	if err := serveMux(s.Resource, c); err != Miss {
+		return err
 	}
-	if hit, err := serveMux(s.Guest, c); hit {
-		return true, err
+	if err := serveMux(s.Guest, c); err != Miss {
+		return err
 	}
 
 	if isAdmin(c) {
-		if hit, err := serveMux(s.Admin, c); hit {
-			return true, err
+		if err := serveMux(s.Admin, c); err != Miss {
+			return err
 		}
 	}
 
-	return false, nil
+	return Miss
 }
 
 // ServeInternal serves the incoming request with the mux set, but only serves
 // resource for normal users, and allows only admins (users with positive
 // level) to visit the guest mux.
-func (s *MuxSet) ServeInternal(c *C) (bool, error) {
-	if hit, err := serveMux(s.Auth, c); hit {
-		return true, err
+func (s *MuxSet) ServeInternal(c *C) error {
+	if err := serveMux(s.Auth, c); err != Miss {
+		return err
 	}
 	if s.AuthSetup != nil {
 		s.AuthSetup(c)
 	}
 
-	if hit, err := serveMux(s.Resource, c); hit {
-		return true, err
+	if err := serveMux(s.Resource, c); err != Miss {
+		return err
 	}
 
 	if !isAdmin(c) {
 		if c.Path == "/" {
 			if s.InternalSignIn != nil {
-				return true, s.InternalSignIn(c)
+				return s.InternalSignIn(c)
 			}
-			return true, errcode.Unauthorizedf("please sign in")
+			return errcode.Unauthorizedf("please sign in")
 		}
 		c.Redirect("/")
-		return true, nil
+		return nil
 	}
 
-	if hit, err := serveMux(s.Guest, c); hit {
-		return true, err
+	if err := serveMux(s.Guest, c); err != Miss {
+		return err
 	}
-	if hit, err := serveMux(s.Admin, c); hit {
-		return true, err
+	if err := serveMux(s.Admin, c); err != Miss {
+		return err
 	}
 
-	return false, nil
+	return Miss
 }
