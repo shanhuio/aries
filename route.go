@@ -45,3 +45,16 @@ func newRoute(p string) *route {
 		isDir: isDir,
 	}
 }
+
+func (r *route) dir(i int) string {
+	return r.p[:r.parts[i].start]
+}
+
+func (r *route) current(i int) string {
+	part := r.parts[i]
+	return r.p[part.start:part.end]
+}
+
+func (r *route) rel(i int) string {
+	return r.p[r.parts[i].start:]
+}

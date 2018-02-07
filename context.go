@@ -21,6 +21,9 @@ type C struct {
 	HTTPS bool
 
 	Data map[string]interface{}
+
+	route    *route
+	routePos int
 }
 
 // NewContext creates a new context from the incomming request.
@@ -40,6 +43,8 @@ func NewContext(w http.ResponseWriter, req *http.Request) *C {
 		Req:   req,
 		HTTPS: isHTTPS,
 		Data:  make(map[string]interface{}),
+
+		route: newRoute(u.Path),
 	}
 }
 
