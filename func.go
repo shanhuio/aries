@@ -13,6 +13,9 @@ func okHandler(c *C) error {
 	return nil
 }
 
+// Serve implements the service interface.
+func (f Func) Serve(c *C) error { return f(c) }
+
 func (f Func) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	c := NewContext(w, req)
 	if c.Path == "/ok" {

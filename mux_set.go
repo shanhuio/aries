@@ -6,21 +6,21 @@ import (
 
 // MuxSet is a set of muxes that
 type MuxSet struct {
-	Auth      Func
+	Auth      Service
 	AuthSetup func(c *C)
 
-	Resource Func
-	Guest    Func
-	Admin    Func
+	Resource Service
+	Guest    Service
+	Admin    Service
 
 	InternalSignIn Func
 }
 
-func serveMux(m Func, c *C) error {
+func serveMux(m Service, c *C) error {
 	if m == nil {
 		return Miss
 	}
-	return m(c)
+	return m.Serve(c)
 }
 
 func isAdmin(c *C) bool {
