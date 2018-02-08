@@ -10,9 +10,10 @@ type routePart struct {
 }
 
 type route struct {
-	p     string
-	parts []*routePart
-	isDir bool
+	p      string
+	parts  []*routePart
+	routes []string
+	isDir  bool
 }
 
 func newRoute(p string) *route {
@@ -25,6 +26,7 @@ func newRoute(p string) *route {
 
 	splits := strings.Split(p, "/")
 	var parts []*routePart
+	var routes []string
 	for _, s := range splits {
 		if len(s) == 0 {
 			continue
@@ -37,12 +39,14 @@ func newRoute(p string) *route {
 			start: start,
 			end:   end,
 		})
+		routes = append(routes, s)
 	}
 
 	return &route{
-		p:     w.String(),
-		parts: parts,
-		isDir: isDir,
+		p:      w.String(),
+		parts:  parts,
+		routes: routes,
+		isDir:  isDir,
 	}
 }
 
@@ -57,4 +61,8 @@ func (r *route) current(i int) string {
 
 func (r *route) rel(i int) string {
 	return r.p[r.parts[i].start:]
+}
+
+func (r *route) relRoute(i int) []string {
+	return r.routes[i:]
 }

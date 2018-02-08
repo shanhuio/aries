@@ -8,8 +8,7 @@ type trieNode struct {
 	branch string
 	child  map[byte]*trieNode
 	prefix string
-	// hit = false if the node is created as assitant node
-	hit bool
+	hit    bool // false if the node is not a leaf
 }
 
 func newTrieRoot() *trieNode {
