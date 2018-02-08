@@ -75,12 +75,15 @@ func (r *Router) Serve(c *C) error {
 	}
 
 	route := c.route.relRoute(c.routePos)
-	p := r.trie.Find(route)
-	f, ok := r.funcs[p]
-	if !ok {
+	hitRoute, p := r.trie.Find(route)
+	if p == "" {
 		return r.notFound(c)
 	}
+	f := r.funcs[p]
+	if f == nil {
+		panic(fmt.Errorf("route function not found for %q", p))
+	}
 
-	// TODO: this is not right...
+	c.routePos += len(hitRoute)
 	return f(c)
 }
