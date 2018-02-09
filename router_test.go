@@ -70,5 +70,24 @@ func TestRouter(t *testing.T) {
 			t.Errorf("get %q, want 404 response, got %d", p, code)
 		}
 	}
-
 }
+
+func TestRouterWithIndex(t *testing.T ) {
+	r := NewRouter()
+	r.Index(makeEcho("index"))
+	s := httptest.NewServer(Serve(r))
+	defer s.Close()
+
+	got, err := httpGetString(s.Client(), s.URL)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if got != "index" {
+		t.Errorf(
+			"get index page, want %q in response, got %q",
+			"index", got,
+		)
+	}
+}
+	
