@@ -50,6 +50,10 @@ func newRoute(p string) *route {
 	}
 }
 
+func (r *route) size() int {
+	return len(r.routes)
+}
+
 func (r *route) dir(i int) string {
 	return r.p[:r.parts[i].start]
 }

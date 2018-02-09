@@ -13,14 +13,19 @@ type Router struct {
 	miss  Func
 
 	trie  *trie.Trie
-	funcs map[string]Func
+	nodes map[string]*routerNode
+}
+
+type routerNode struct {
+	f     Func
+	isDir bool
 }
 
 // NewRouter creates a new router for filesystem like path routing.
 func NewRouter() *Router {
 	return &Router{
 		trie:  trie.New(),
-		funcs: make(map[string]Func),
+		nodes: make(map[string]*routerNode),
 	}
 }
 
@@ -33,9 +38,18 @@ func (r *Router) Index(f Func) { r.index = f }
 // not hit anything in the routing tree.
 func (r *Router) Default(f Func) { r.miss = f }
 
-// Add adds a routing node into the routing tree
-func (r *Router) Add(p string, f Func) error {
-	if f == nil {
+// File adds a routing file node into the routing tree.
+func (r *Router) File(p string, f Func) error {
+	return r.add(p, &routerNode{f: f})
+}
+
+// Dir adds a routing directory node into the routing tree.
+func (r *Router) Dir(p string, f Func) error {
+	return r.add(p, &routerNode{f: f, isDir: true})
+}
+
+func (r *Router) add(p string, n *routerNode) error {
+	if n.f == nil {
 		panic("function is nil")
 	}
 
@@ -43,11 +57,11 @@ func (r *Router) Add(p string, f Func) error {
 	if route.p == "" {
 		panic("trying to add empty route, use Index() instead")
 	}
-	if r.funcs[route.p] != nil {
+	if r.nodes[route.p] != nil {
 		return fmt.Errorf("path %s already assigned", route.p)
 	}
 
-	r.funcs[route.p] = f
+	r.nodes[route.p] = n
 	ok := r.trie.Add(route.routes, route.p)
 	if !ok {
 		panic("adding to trie failed")
@@ -79,11 +93,14 @@ func (r *Router) Serve(c *C) error {
 	if p == "" {
 		return r.notFound(c)
 	}
-	f := r.funcs[p]
-	if f == nil {
+	n := r.nodes[p]
+	if n == nil {
 		panic(fmt.Errorf("route function not found for %q", p))
 	}
 
 	c.routePos += len(hitRoute)
-	return f(c)
+	if n.isDir || c.routePos == c.route.size() {
+		return n.f(c)
+	}
+	return r.notFound(c)
 }
