@@ -6,8 +6,7 @@ import (
 
 // ServiceSet is a set of muxes that
 type ServiceSet struct {
-	Auth      Service
-	AuthSetup func(c *C)
+	Auth Auth
 
 	Resource Service
 	Guest    Service
@@ -33,8 +32,8 @@ func (s *ServiceSet) Serve(c *C) error {
 	if err := serveMux(s.Auth, c); err != Miss {
 		return err
 	}
-	if s.AuthSetup != nil {
-		s.AuthSetup(c)
+	if s.Auth != nil {
+		s.Auth.Setup(c)
 	}
 
 	if err := serveMux(s.Resource, c); err != Miss {
@@ -64,8 +63,8 @@ func (s *ServiceSet) ServeInternal(c *C) error {
 	if err := serveMux(s.Auth, c); err != Miss {
 		return err
 	}
-	if s.AuthSetup != nil {
-		s.AuthSetup(c)
+	if s.Auth != nil {
+		s.Auth.Setup(c)
 	}
 
 	if err := serveMux(s.Resource, c); err != Miss {

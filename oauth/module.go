@@ -58,26 +58,33 @@ func NewModule(c *Config) *Module {
 	return ret
 }
 
-// Mux makes a webapp module mux that executes the oauth flow on the server
-// side.
-func (mod *Module) Mux() *aries.Mux {
-	m := aries.NewMux()
+type service struct {
+	r *aries.Router
+	m *Module
+}
+
+func (s *service) Setup(c *aries.C)       { s.m.Check(c) }
+func (s *service) Serve(c *aries.C) error { return s.r.Serve(c) }
+
+// Auth makes a aries.Auth that executes the oauth flow on the server side.
+func (mod *Module) Auth() aries.Auth {
+	r := aries.NewRouter()
 	if mod.c.ByPass != "" {
-		m.Exact("/signin-bypass", func(c *aries.C) error {
+		r.File("signin-bypass", func(c *aries.C) error {
 			mod.SetupCookie(c, mod.c.ByPass)
 			mod.signInRedirect(c)
 			return nil
 		})
 	}
 
-	m.Exact("/signout", func(c *aries.C) error {
+	r.File("signout", func(c *aries.C) error {
 		c.ClearCookie("session")
 		c.Redirect(mod.redirect)
 		return nil
 	})
 
 	if mod.c.KeyStore != nil {
-		m.Exact("/pubkey/signin", func(c *aries.C) error {
+		r.File("pubkey/signin", func(c *aries.C) error {
 			req := new(LoginRequest)
 			if err := aries.UnmarshalJSONBody(c, req); err != nil {
 				return err
@@ -110,12 +117,12 @@ func (mod *Module) Mux() *aries.Mux {
 	}
 
 	if mod.github != nil {
-		m.Exact("/github/signin", func(c *aries.C) error {
+		r.File("github/signin", func(c *aries.C) error {
 			c.Redirect(mod.github.signInURL())
 			return nil
 		})
 
-		m.Exact("/github/callback", func(c *aries.C) error {
+		r.File("github/callback", func(c *aries.C) error {
 			user, err := mod.github.callback(c.Req)
 			if err != nil {
 				log.Println("github callback: ", err)
@@ -126,12 +133,12 @@ func (mod *Module) Mux() *aries.Mux {
 	}
 
 	if mod.google != nil {
-		m.Exact("/google/signin", func(c *aries.C) error {
+		r.File("google/signin", func(c *aries.C) error {
 			c.Redirect(mod.google.signInURL())
 			return nil
 		})
 
-		m.Exact("/google/callback", func(c *aries.C) error {
+		r.File("google/callback", func(c *aries.C) error {
 			user, err := mod.google.callback(c.Req)
 			if err != nil {
 				log.Println("google callback: ", err)
@@ -141,7 +148,10 @@ func (mod *Module) Mux() *aries.Mux {
 		})
 	}
 
-	return m
+	return &service{
+		m: mod,
+		r: r,
+	}
 }
 
 func readSessionToken(c *aries.C) (string, string) {
