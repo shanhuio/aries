@@ -14,11 +14,21 @@ func httpGetString(c *http.Client, url string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer resp.Body.Close()
 	bs, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
 	return string(bs), nil
+}
+
+func httpGetCode(c *http.Client, url string) (int, error) {
+	resp, err := c.Get(url)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+	return resp.StatusCode, nil
 }
 
 func TestFunc(t *testing.T) {

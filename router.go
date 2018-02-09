@@ -99,7 +99,7 @@ func (r *Router) Serve(c *C) error {
 	}
 
 	c.routePos += len(hitRoute)
-	if n.isDir || c.routePos == c.route.size() {
+	if n.isDir || (c.routePos == c.route.size() && !c.route.isDir) {
 		return n.f(c)
 	}
 	return r.notFound(c)

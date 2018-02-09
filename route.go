@@ -55,18 +55,30 @@ func (r *route) size() int {
 }
 
 func (r *route) dir(i int) string {
+	if i >= len(r.parts) {
+		return r.p
+	}
 	return r.p[:r.parts[i].start]
 }
 
 func (r *route) current(i int) string {
+	if i >= len(r.routes) {
+		panic("out of range")
+	}
 	part := r.parts[i]
 	return r.p[part.start:part.end]
 }
 
 func (r *route) rel(i int) string {
+	if i >= len(r.parts) {
+		return ""
+	}
 	return r.p[r.parts[i].start:]
 }
 
 func (r *route) relRoute(i int) []string {
+	if i >= len(r.routes) {
+		return nil
+	}
 	return r.routes[i:]
 }
