@@ -72,7 +72,7 @@ func TestRouter(t *testing.T) {
 	}
 }
 
-func TestRouterWithIndex(t *testing.T ) {
+func TestRouterWithIndex(t *testing.T) {
 	r := NewRouter()
 	r.Index(makeEcho("index"))
 	s := httptest.NewServer(Serve(r))

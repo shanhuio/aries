@@ -72,7 +72,7 @@ func (r *Router) add(p string, n *routerNode) error {
 
 func (r *Router) notFound(c *C) error {
 	if r.miss == nil {
-		return NotFound
+		return Miss
 	}
 	return r.miss(c)
 }
