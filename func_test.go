@@ -15,6 +15,9 @@ func httpGetString(c *http.Client, url string) (string, error) {
 		return "", err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("status code: %d", resp.StatusCode)
+	}
 	bs, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", err

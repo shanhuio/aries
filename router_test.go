@@ -90,4 +90,24 @@ func TestRouterWithIndex(t *testing.T ) {
 		)
 	}
 }
-	
+
+func TestRouterWithDefault(t *testing.T) {
+	r := NewRouter()
+	r.Index(makeEcho("index"))
+	r.Default(makeEcho("default"))
+	s := httptest.NewServer(Serve(r))
+	defer s.Close()
+
+	got, err := httpGetString(s.Client(), s.URL+"/notfound")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if got != "default" {
+		t.Errorf(
+			"get a 404 page, want %q in response, got %q",
+			"default", got,
+		)
+	}
+}
