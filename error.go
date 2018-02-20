@@ -2,7 +2,6 @@ package aries
 
 import (
 	"errors"
-	"log"
 
 	"shanhu.io/misc/errcode"
 )
@@ -12,7 +11,7 @@ func AltError(err error, code, s string) error {
 	if err == nil {
 		return nil
 	}
-	log.Println(s, err)
+	Log.Println(s, err)
 	return errcode.Add(code, errors.New(s))
 }
 

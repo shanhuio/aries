@@ -2,7 +2,6 @@ package aries
 
 import (
 	"encoding/json"
-	"log"
 
 	"shanhu.io/misc/errcode"
 )
@@ -15,7 +14,7 @@ func ReplyJSON(c *C, v interface{}) error {
 	}
 
 	if _, err := c.Resp.Write(bs); err != nil {
-		log.Println(err)
+		c.Log.Println(err)
 	}
 	return nil
 }

@@ -1,6 +1,7 @@
 package aries
 
 import (
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -21,6 +22,8 @@ type C struct {
 	HTTPS bool
 
 	Data map[string]interface{}
+
+	Log *log.Logger // logger for logging internal messages.
 
 	route    *route
 	routePos int
@@ -43,6 +46,7 @@ func NewContext(w http.ResponseWriter, req *http.Request) *C {
 		Req:   req,
 		HTTPS: isHTTPS,
 		Data:  make(map[string]interface{}),
+		Log:   Log,
 
 		route: newRoute(u.Path),
 	}

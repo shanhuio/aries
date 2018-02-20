@@ -2,7 +2,6 @@ package aries
 
 import (
 	"flag"
-	"log"
 
 	"shanhu.io/misc/jsonfile"
 )
@@ -21,10 +20,10 @@ func (m *Main) Main() {
 	flag.Parse()
 
 	if err := jsonfile.Read(*conf, m.Config); err != nil {
-		log.Fatal(err)
+		Log.Fatal(err)
 	}
 
 	if err := m.Serve(m.Addr); err != nil {
-		log.Fatal(err)
+		Log.Fatal(err)
 	}
 }

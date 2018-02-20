@@ -2,7 +2,6 @@ package aries
 
 import (
 	"html/template"
-	"log"
 	"path/filepath"
 
 	"shanhu.io/misc/errcode"
@@ -31,11 +30,11 @@ func (ts *Templates) tmpl(f string) string {
 func (ts *Templates) Serve(c *C, p string, dat interface{}) error {
 	t, err := template.ParseFiles(ts.tmpl(p))
 	if err != nil {
-		log.Println(err)
+		c.Log.Println(err)
 		return errcode.NotFoundf("page not found")
 	}
 	if err := t.Execute(c.Resp, dat); err != nil {
-		log.Println(err)
+		c.Log.Println(err)
 	}
 	return nil
 }
