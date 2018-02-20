@@ -33,7 +33,7 @@ func NewContext(w http.ResponseWriter, req *http.Request) *C {
 	if strings.ToLower(u.Scheme) == "https" {
 		isHTTPS = true
 	}
-	if strings.ToLower(req.Header.Get("X-Forwared-Proto")) == "https" {
+	if strings.ToLower(req.Header.Get("X-Forwarded-Proto")) == "https" {
 		isHTTPS = true
 	}
 
