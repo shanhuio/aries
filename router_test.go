@@ -5,6 +5,8 @@ import (
 
 	"fmt"
 	"net/http/httptest"
+
+	"smallrepo.com/base/httputil"
 )
 
 func makeEcho(s string) Func {
@@ -41,7 +43,7 @@ func TestRouter(t *testing.T) {
 		{"/books/", "books: "},
 		{"/books", "books: "},
 	} {
-		got, err := httpGetString(c, host+test.p)
+		got, err := httputil.GetString(c, host+test.p)
 		if err != nil {
 			t.Error(err)
 			continue
@@ -60,7 +62,7 @@ func TestRouter(t *testing.T) {
 		"/bookss",
 		"/something/",
 	} {
-		code, err := httpGetCode(c, host+p)
+		code, err := httputil.GetCode(c, host+p)
 		if err != nil {
 			t.Error(err)
 			continue
@@ -78,7 +80,7 @@ func TestRouterWithIndex(t *testing.T) {
 	s := httptest.NewServer(Serve(r))
 	defer s.Close()
 
-	got, err := httpGetString(s.Client(), s.URL)
+	got, err := httputil.GetString(s.Client(), s.URL)
 	if err != nil {
 		t.Error(err)
 		return
@@ -98,7 +100,7 @@ func TestRouterWithDefault(t *testing.T) {
 	s := httptest.NewServer(Serve(r))
 	defer s.Close()
 
-	got, err := httpGetString(s.Client(), s.URL+"/notfound")
+	got, err := httputil.GetString(s.Client(), s.URL+"/notfound")
 	if err != nil {
 		t.Error(err)
 		return
