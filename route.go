@@ -50,6 +50,8 @@ func newRoute(p string) *route {
 	}
 }
 
+func (r *route) path() string { return r.p }
+
 func (r *route) size() int {
 	return len(r.routes)
 }
