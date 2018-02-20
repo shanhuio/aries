@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestRoutePath(t *testing.T) {
+func TestRoute(t *testing.T) {
 	for _, test := range []struct {
 		path string
 		cleaned string
