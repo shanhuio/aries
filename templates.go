@@ -4,7 +4,6 @@ import (
 	"html/template"
 	"path/filepath"
 
-	"shanhu.io/misc/errcode"
 	"shanhu.io/misc/strutil"
 )
 
@@ -31,7 +30,7 @@ func (ts *Templates) Serve(c *C, p string, dat interface{}) error {
 	t, err := template.ParseFiles(ts.tmpl(p))
 	if err != nil {
 		c.Log.Println(err)
-		return errcode.NotFoundf("page not found")
+		return NotFound
 	}
 	if err := t.Execute(c.Resp, dat); err != nil {
 		c.Log.Println(err)

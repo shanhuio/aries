@@ -3,10 +3,10 @@ package aries
 import (
 	"testing"
 
-	"os"
 	"io/ioutil"
-	"path/filepath"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 
 	"smallrepo.com/base/httputil"
 )
@@ -34,7 +34,7 @@ func TestTemplates(t *testing.T) {
 	f := func(c *C) error {
 		dat := struct {
 			Message1, Message2 string
-		} {
+		}{
 			Message1: "hello",
 			Message2: "hi",
 		}
@@ -47,7 +47,7 @@ func TestTemplates(t *testing.T) {
 	c := httputil.NewClient(s.URL)
 	for _, test := range []struct {
 		url, want string
-	} {
+	}{
 		{"/t1.html", "hello"},
 		{"/t2.html", "hi"},
 	} {
