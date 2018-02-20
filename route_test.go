@@ -6,11 +6,11 @@ import (
 
 func TestRoute(t *testing.T) {
 	for _, test := range []struct {
-		path string
+		path    string
 		cleaned string
-		size int
-		isDir bool
-	} {
+		size    int
+		isDir   bool
+	}{
 		{"/", "", 0, true},
 		{"/something", "/something", 1, false},
 		{"/something/", "/something", 1, true},
