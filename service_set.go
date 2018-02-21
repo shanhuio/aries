@@ -16,7 +16,7 @@ type ServiceSet struct {
 	InternalSignIn Func
 }
 
-func serveMux(m Service, c *C) error {
+func serveService(m Service, c *C) error {
 	if m == nil {
 		return Miss
 	}
@@ -29,26 +29,26 @@ func isAdmin(c *C) bool {
 
 // Serve serves the incoming request with the mux set.
 func (s *ServiceSet) Serve(c *C) error {
-	if err := serveMux(s.Auth, c); err != Miss {
+	if err := serveService(s.Auth, c); err != Miss {
 		return err
 	}
 	if s.Auth != nil {
 		s.Auth.Setup(c)
 	}
 
-	if err := serveMux(s.Resource, c); err != Miss {
+	if err := serveService(s.Resource, c); err != Miss {
 		return err
 	}
-	if err := serveMux(s.Guest, c); err != Miss {
+	if err := serveService(s.Guest, c); err != Miss {
 		return err
 	}
 	if c.User != "" {
-		if err := serveMux(s.User, c); err != Miss {
+		if err := serveService(s.User, c); err != Miss {
 			return err
 		}
 	}
 	if isAdmin(c) {
-		if err := serveMux(s.Admin, c); err != Miss {
+		if err := serveService(s.Admin, c); err != Miss {
 			return err
 		}
 	}
@@ -60,14 +60,14 @@ func (s *ServiceSet) Serve(c *C) error {
 // resource for normal users, and allows only admins (users with positive
 // level) to visit the guest mux.
 func (s *ServiceSet) ServeInternal(c *C) error {
-	if err := serveMux(s.Auth, c); err != Miss {
+	if err := serveService(s.Auth, c); err != Miss {
 		return err
 	}
 	if s.Auth != nil {
 		s.Auth.Setup(c)
 	}
 
-	if err := serveMux(s.Resource, c); err != Miss {
+	if err := serveService(s.Resource, c); err != Miss {
 		return err
 	}
 
@@ -82,10 +82,10 @@ func (s *ServiceSet) ServeInternal(c *C) error {
 		return nil
 	}
 
-	if err := serveMux(s.Guest, c); err != Miss {
+	if err := serveService(s.Guest, c); err != Miss {
 		return err
 	}
-	if err := serveMux(s.Admin, c); err != Miss {
+	if err := serveService(s.Admin, c); err != Miss {
 		return err
 	}
 
