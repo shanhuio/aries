@@ -1,9 +1,5 @@
 package aries
 
-import (
-	"shanhu.io/misc/errcode"
-)
-
 // ServiceSet is a set of muxes that
 type ServiceSet struct {
 	Auth Auth
@@ -76,13 +72,16 @@ func (s *ServiceSet) ServeInternal(c *C) error {
 			if s.InternalSignIn != nil {
 				return s.InternalSignIn(c)
 			}
-			return errcode.Unauthorizedf("please sign in")
+			return NeedSignIn
 		}
 		c.Redirect("/")
 		return nil
 	}
 
 	if err := serveService(s.Guest, c); err != Miss {
+		return err
+	}
+	if err := serveService(s.User, c); err != Miss {
 		return err
 	}
 	if err := serveService(s.Admin, c); err != Miss {

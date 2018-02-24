@@ -38,3 +38,11 @@ func (f Func) ListenAndServe(addr string) error {
 func ListenAndServe(addr string, f Func) error {
 	return f.ListenAndServe(addr)
 }
+
+// MakeStringFunc creates a Func that always reply the given string.
+func MakeStringFunc(s string) Func {
+	return func(c *C) error {
+		fmt.Fprint(c.Resp, s)
+		return nil
+	}
+}

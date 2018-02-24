@@ -35,23 +35,18 @@ func TestStaticFiles(t *testing.T) {
 
 	c := httputil.NewClient(s.URL)
 	for _, test := range []struct {
-		url, want string
+		p, want string
 	}{
 		{"/f1.html", "hello"},
 		{"/f2.html", "hi"},
 	} {
-		reply, err := c.GetString(test.url)
+		reply, err := c.GetString(test.p)
 		if err != nil {
-			t.Errorf(
-				"http get %q, got error: %s",
-				test.url, err,
-			)
+			t.Errorf("%q - got error: %s", test.p, err)
+			continue
 		}
 		if reply != test.want {
-			t.Errorf(
-				"http get %q, want %q, got %q",
-				test.url, test.want, reply,
-			)
+			t.Errorf("%q - want %q, got %q", test.p, test.want, reply)
 		}
 	}
 }

@@ -9,13 +9,6 @@ import (
 	"smallrepo.com/base/httputil"
 )
 
-func makeEcho(s string) Func {
-	return func(c *C) error {
-		fmt.Fprint(c.Resp, s)
-		return nil
-	}
-}
-
 func makeEchoRel(s string) Func {
 	return func(c *C) error {
 		fmt.Fprintf(c.Resp, "%s: %s", s, c.Rel())
@@ -25,7 +18,7 @@ func makeEchoRel(s string) Func {
 
 func TestRouter(t *testing.T) {
 	r := NewRouter()
-	r.File("something", makeEcho("xxx"))
+	r.File("something", MakeStringFunc("xxx"))
 	r.Dir("books", makeEchoRel("books"))
 
 	s := httptest.NewServer(Serve(r))
@@ -76,7 +69,7 @@ func TestRouter(t *testing.T) {
 
 func TestRouterWithIndex(t *testing.T) {
 	r := NewRouter()
-	r.Index(makeEcho("index"))
+	r.Index(MakeStringFunc("index"))
 	s := httptest.NewServer(Serve(r))
 	defer s.Close()
 
@@ -95,8 +88,8 @@ func TestRouterWithIndex(t *testing.T) {
 
 func TestRouterWithDefault(t *testing.T) {
 	r := NewRouter()
-	r.Index(makeEcho("index"))
-	r.Default(makeEcho("default"))
+	r.Index(MakeStringFunc("index"))
+	r.Default(MakeStringFunc("default"))
 	s := httptest.NewServer(Serve(r))
 	defer s.Close()
 

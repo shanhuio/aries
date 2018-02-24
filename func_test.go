@@ -3,7 +3,6 @@ package aries
 import (
 	"testing"
 
-	"fmt"
 	"net/http/httptest"
 
 	"smallrepo.com/base/httputil"
@@ -11,10 +10,7 @@ import (
 
 func TestFunc(t *testing.T) {
 	const msg = "hello"
-	f := func(c *C) error {
-		fmt.Fprint(c.Resp, msg)
-		return nil
-	}
+	f := MakeStringFunc(msg)
 	s := httptest.NewServer(Func(f))
 	defer s.Close()
 
@@ -30,10 +26,7 @@ func TestFunc(t *testing.T) {
 
 func TestFuncHTTPS(t *testing.T) {
 	const msg = "hello"
-	f := func(c *C) error {
-		fmt.Fprint(c.Resp, msg)
-		return nil
-	}
+	f := MakeStringFunc(msg)
 	s := httptest.NewTLSServer(Func(f))
 	defer s.Close()
 
