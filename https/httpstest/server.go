@@ -9,13 +9,21 @@ import (
 type Server struct {
 	*httptest.Server
 
-	Transport *http.Transport
+	TLSConfigs *TLSConfigs
+	Transport  *http.Transport
 }
 
 // Client creates an HTTP client which transport connects directly to the
 // server.
 func (s *Server) Client() *http.Client {
 	return &http.Client{Transport: s.Transport}
+}
+
+// SinkTransport sinks the transport to the server
+// and sets the TLS client config.
+func (s *Server) SinkTransport(tr *http.Transport) {
+	tr.DialContext = s.Transport.DialContext
+	tr.TLSClientConfig = s.Transport.TLSClientConfig
 }
 
 // NewServer creates an HTTPS server for the given testing domains.
@@ -31,17 +39,19 @@ func NewServer(domains []string, h http.Handler) (*Server, error) {
 
 	serverHost := server.Listener.Addr().String()
 	return &Server{
-		Server:    server,
-		Transport: c.Sink(serverHost),
+		Server:     server,
+		TLSConfigs: c,
+		Transport:  c.Sink(serverHost),
 	}, nil
 }
 
 // DualServer wraps two *httptest.Server's with a transport that
 // goes to one of them base on HTTP or HTTPS.
 type DualServer struct {
-	HTTP      *httptest.Server
-	HTTPS     *httptest.Server
-	Transport *http.Transport
+	HTTP       *httptest.Server
+	HTTPS      *httptest.Server
+	TLSConfigs *TLSConfigs
+	Transport  *http.Transport
 }
 
 // NewDualServer creates an HTTPS dual server for the given testing domains.
@@ -60,9 +70,10 @@ func NewDualServer(domains []string, h http.Handler) (*DualServer, error) {
 	httpAddr := httpServer.Listener.Addr().String()
 	httpsAddr := httpsServer.Listener.Addr().String()
 	return &DualServer{
-		HTTP:      httpServer,
-		HTTPS:     httpsServer,
-		Transport: c.SinkHTTPS(httpAddr, httpsAddr),
+		HTTP:       httpServer,
+		HTTPS:      httpsServer,
+		TLSConfigs: c,
+		Transport:  c.SinkHTTPS(httpAddr, httpsAddr),
 	}, nil
 }
 
