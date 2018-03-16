@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"golang.org/x/oauth2"
-
 	"shanhu.io/misc/signer"
 )
 
