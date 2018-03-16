@@ -3,33 +3,13 @@ package aries
 import (
 	"testing"
 
-	"io/ioutil"
 	"net/http/httptest"
-	"os"
-	"path/filepath"
 
 	"smallrepo.com/base/httputil"
 )
 
 func TestTemplates(t *testing.T) {
-	dir, err := ioutil.TempDir("", "aries")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	defer os.RemoveAll(dir)
-
-	addFile := func(name, content string) {
-		p := filepath.Join(dir, name)
-		if err := ioutil.WriteFile(p, []byte(content), 0600); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	addFile("t1.html", "{{.Message1}}")
-	addFile("t2.html", "{{.Message2}}")
-
-	tmpls := NewTemplates(dir)
+	tmpls := NewTemplates("testdata/templates")
 
 	f := func(c *C) error {
 		dat := struct {
@@ -48,8 +28,8 @@ func TestTemplates(t *testing.T) {
 	for _, test := range []struct {
 		url, want string
 	}{
-		{"/t1.html", "hello"},
-		{"/t2.html", "hi"},
+		{"/t1.html", "hello\n"},
+		{"/t2.html", "hi\n"},
 	} {
 		reply, err := c.GetString(test.url)
 		if err != nil {

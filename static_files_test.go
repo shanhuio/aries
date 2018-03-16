@@ -3,32 +3,13 @@ package aries
 import (
 	"testing"
 
-	"io/ioutil"
 	"net/http/httptest"
-	"os"
-	"path/filepath"
 
 	"smallrepo.com/base/httputil"
 )
 
 func TestStaticFiles(t *testing.T) {
-	dir, err := ioutil.TempDir("", "aries")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	defer os.RemoveAll(dir)
-
-	addFile := func(name, content string) {
-		p := filepath.Join(dir, name)
-		if err := ioutil.WriteFile(p, []byte(content), 0600); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	addFile("f1.html", "hello")
-	addFile("f2.html", "hi")
-	static := NewStaticFiles(dir)
+	static := NewStaticFiles("testdata/static")
 
 	s := httptest.NewServer(Serve(static))
 	defer s.Close()
@@ -37,8 +18,8 @@ func TestStaticFiles(t *testing.T) {
 	for _, test := range []struct {
 		p, want string
 	}{
-		{"/f1.html", "hello"},
-		{"/f2.html", "hi"},
+		{"/f1.html", "hello\n"},
+		{"/f2.html", "hi\n"},
 	} {
 		reply, err := c.GetString(test.p)
 		if err != nil {

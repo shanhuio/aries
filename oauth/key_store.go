@@ -9,6 +9,34 @@ type KeyStore interface {
 	Key(user string) ([]byte, error)
 }
 
+// MemKeyStore is a storage of public keys in memory.
+type MemKeyStore struct {
+	keys map[string][]byte
+}
+
+// NewMemKeyStore creates a new empty key store.
+func NewMemKeyStore() *MemKeyStore {
+	return &MemKeyStore{keys: make(map[string][]byte)}
+}
+
+// Set sets the key for the given user.
+func (s *MemKeyStore) Set(user string, k []byte) {
+	cp := make([]byte, len(k))
+	copy(cp, k)
+	s.keys[user] = cp
+}
+
+// Key reads the key for the given user.
+func (s *MemKeyStore) Key(user string) ([]byte, error) {
+	bs, found := s.keys[user]
+	if !found {
+		return nil, nil
+	}
+	ret := make([]byte, len(bs))
+	copy(ret, bs)
+	return ret, nil
+}
+
 // FileKeyStore is a storage of public keys.
 type FileKeyStore struct {
 	keys map[string]string
