@@ -15,7 +15,7 @@ func (a *testAuth) Serve(c *C) error {
 	return Miss
 }
 
-func (a *testAuth) Setup(c *C) {
+func (a *testAuth) Setup(c *C) error {
 	bearer := Bearer(c)
 	if bearer == "test-user" {
 		c.User = "test-user"
@@ -23,6 +23,7 @@ func (a *testAuth) Setup(c *C) {
 		c.User = "test-admin"
 		c.UserLevel = 1
 	}
+	return nil
 }
 
 func TestServiceSet(t *testing.T) {

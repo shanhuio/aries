@@ -36,12 +36,12 @@ func (c *JSONConfig) Config() *Config {
 func (c *JSONConfig) SimpleGitHubConfig() *Config {
 	ret := c.Config()
 	ret.LoginCheck = MapGitHub
-	ret.Check = func(name string) (interface{}, int) {
+	ret.Check = func(name string) (interface{}, int, error) {
 		_, isAdmin := c.PublicKeys[name]
 		if isAdmin {
-			return nil, 1
+			return nil, 1, nil
 		}
-		return nil, 0
+		return nil, 0, nil
 	}
 	return ret
 }
@@ -65,7 +65,7 @@ type Config struct {
 	LoginCheck func(c *aries.C, method, id string) (string, error)
 
 	// Fetches the user account structure.
-	Check func(user string) (interface{}, int)
+	Check func(user string) (interface{}, int, error)
 }
 
 // MapGitHub is a login check function that only allows

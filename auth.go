@@ -5,5 +5,5 @@ type Auth interface {
 	Service
 
 	// Setup sets up the authentication in context.
-	Setup(c *C)
+	Setup(c *C) error
 }

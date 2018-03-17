@@ -29,7 +29,9 @@ func (s *ServiceSet) Serve(c *C) error {
 		return err
 	}
 	if s.Auth != nil {
-		s.Auth.Setup(c)
+		if err := s.Auth.Setup(c); err != nil {
+			return err
+		}
 	}
 
 	if err := serveService(s.Resource, c); err != Miss {

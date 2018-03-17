@@ -63,7 +63,11 @@ type service struct {
 	m *Module
 }
 
-func (s *service) Setup(c *aries.C)       { s.m.Check(c) }
+func (s *service) Setup(c *aries.C) error {
+	_, err := s.m.Check(c)
+	return err
+}
+
 func (s *service) Serve(c *aries.C) error { return s.r.Serve(c) }
 
 // Auth makes a aries.Auth that executes the oauth flow on the server side.
@@ -187,13 +191,15 @@ func (mod *Module) signIn(c *aries.C, method, user string) error {
 	return nil
 }
 
-func (mod *Module) checkUser(c *aries.C) (valid, needRefresh bool) {
+func (mod *Module) checkUser(c *aries.C) (
+	valid, needRefresh bool, err error,
+) {
 	c.User = ""
 
 	session, method := readSessionToken(c)
 	bs, left, ok := mod.sessions.Check(session)
 	if !ok {
-		return false, false
+		return false, false, nil
 	}
 	needRefresh = left < mod.sessionRefresh && method == "cookie"
 
@@ -201,12 +207,15 @@ func (mod *Module) checkUser(c *aries.C) (valid, needRefresh bool) {
 	if mod.c.Check == nil {
 		c.User = user
 		c.UserLevel = 0
-		return true, needRefresh
+		return true, needRefresh, nil
 	}
 
-	u, lvl := mod.c.Check(user)
+	u, lvl, err := mod.c.Check(user)
+	if err != nil {
+		return false, false, err
+	}
 	if lvl < 0 {
-		return false, false
+		return false, false, nil
 	}
 
 	c.User = user
@@ -214,7 +223,7 @@ func (mod *Module) checkUser(c *aries.C) (valid, needRefresh bool) {
 	if u != nil {
 		c.Data["user"] = u
 	}
-	return true, needRefresh
+	return true, needRefresh, nil
 }
 
 // NewCreds creates new credentials for the user.
@@ -223,14 +232,17 @@ func (mod *Module) NewCreds(user string) (string, time.Time) {
 }
 
 // Check checks the user credentials.
-func (mod *Module) Check(c *aries.C) bool {
-	ok, needRefresh := mod.checkUser(c)
+func (mod *Module) Check(c *aries.C) (bool, error) {
+	ok, needRefresh, err := mod.checkUser(c)
+	if err != nil {
+		return false, err
+	}
 	if !ok {
 		c.ClearCookie("session")
 	} else if needRefresh {
 		mod.SetupCookie(c, c.User)
 	}
-	return ok
+	return ok, nil
 }
 
 // AuthSetup setups the user authorization context.
