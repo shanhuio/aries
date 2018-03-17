@@ -8,6 +8,7 @@ type ServiceSet struct {
 	Guest    Service
 	User     Service
 	Admin    Service
+	IsAdmin  func(c *C) bool
 
 	InternalSignIn Func
 }
@@ -19,8 +20,11 @@ func serveService(m Service, c *C) error {
 	return m.Serve(c)
 }
 
-func isAdmin(c *C) bool {
-	return c.User != "" && c.UserLevel > 0
+func (s *ServiceSet) isAdmin(c *C) bool {
+	if s.IsAdmin == nil {
+		return c.User != "" && c.UserLevel > 0
+	}
+	return s.IsAdmin(c)
 }
 
 // Serve serves the incoming request with the mux set.
@@ -45,7 +49,7 @@ func (s *ServiceSet) Serve(c *C) error {
 			return err
 		}
 	}
-	if isAdmin(c) {
+	if s.isAdmin(c) {
 		if err := serveService(s.Admin, c); err != Miss {
 			return err
 		}
@@ -69,7 +73,7 @@ func (s *ServiceSet) ServeInternal(c *C) error {
 		return err
 	}
 
-	if !isAdmin(c) {
+	if !s.isAdmin(c) {
 		if c.Path == "/" {
 			if s.InternalSignIn != nil {
 				return s.InternalSignIn(c)
