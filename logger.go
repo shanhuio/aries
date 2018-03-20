@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 
 	"shanhu.io/misc/errcode"
 )
@@ -54,4 +55,24 @@ func (l *Logger) AltInternal(err error, s string) error {
 // AltInvalidArg logs the error and returns an alternative invalid arg error.
 func (l *Logger) AltInvalidArg(err error, s string) error {
 	return l.AltError(err, errcode.InvalidArg, s)
+}
+
+// Exit prints the error and exit the service.
+func (l *Logger) Exit(err error) error {
+	l.p.Print(err.Error())
+	os.Exit(1)
+	panic("unreachable")
+}
+
+// Print prints a message to the logger.
+func (l *Logger) Print(s string) {
+	l.p.Print(s)
+}
+
+// Log logs the message to the logger if the logger is not nil.
+func Log(l *Logger, s string) {
+	if l == nil {
+		return
+	}
+	l.Print(s)
 }

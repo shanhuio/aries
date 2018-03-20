@@ -9,14 +9,15 @@ import (
 
 // Templates is a collection of templates.
 type Templates struct {
-	path string
+	path   string
+	logger *Logger
 }
 
 // DefaultTemplatePath is the default template path.
 const DefaultTemplatePath = "_/tmpl"
 
 // NewTemplates creates a collection of templates in a particular folder.
-func NewTemplates(p string) *Templates {
+func NewTemplates(p string, logger *Logger) *Templates {
 	p = strutil.Default(p, DefaultTemplatePath)
 	return &Templates{path: p}
 }
@@ -29,11 +30,11 @@ func (ts *Templates) tmpl(f string) string {
 func (ts *Templates) Serve(c *C, p string, dat interface{}) error {
 	t, err := template.ParseFiles(ts.tmpl(p))
 	if err != nil {
-		c.Log.Println(err)
+		Log(ts.logger, err.Error())
 		return NotFound
 	}
 	if err := t.Execute(c.Resp, dat); err != nil {
-		c.Log.Println(err)
+		Log(ts.logger, err.Error())
 	}
 	return nil
 }

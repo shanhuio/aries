@@ -9,7 +9,7 @@ import (
 )
 
 func TestTemplates(t *testing.T) {
-	tmpls := NewTemplates("testdata/templates")
+	tmpls := NewTemplates("testdata/templates", nil)
 
 	f := func(c *C) error {
 		dat := struct {
