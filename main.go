@@ -1,10 +1,12 @@
 package aries
 
 import (
+	"bytes"
+	"encoding/json"
 	"flag"
+	"io"
+	"io/ioutil"
 	"log"
-
-	"shanhu.io/misc/jsonfile"
 )
 
 // Main wraps the commin main function for web serving.
@@ -15,21 +17,41 @@ type Main struct {
 	Log    *log.Logger
 }
 
+// Run runs the service on the given address and config.
+func (m *Main) Run(addr string, config io.Reader) error {
+	if m.Log == nil {
+		m.Log = Log
+	}
+
+	if addr == "" {
+		addr = m.Addr
+	}
+	if config != nil {
+		dec := json.NewDecoder(config)
+		if err := dec.Decode(m.Config); err != nil {
+			return err
+		}
+	}
+
+	return m.Serve(addr)
+}
+
 // Main runs the main function body.
 func (m *Main) Main() {
 	if m.Log == nil {
 		m.Log = Log
 	}
 
-	flag.StringVar(&m.Addr, "addr", m.Addr, "address to listen on")
+	addr := flag.String("addr", m.Addr, "address to listen on")
 	conf := flag.String("config", "config.json", "config file")
 	flag.Parse()
 
-	if err := jsonfile.Read(*conf, m.Config); err != nil {
+	bs, err := ioutil.ReadFile(*conf)
+	if err != nil {
 		m.Log.Fatal(err)
 	}
 
-	if err := m.Serve(m.Addr); err != nil {
+	if err := m.Run(*addr, bytes.NewReader(bs)); err != nil {
 		m.Log.Fatal(err)
 	}
 }
