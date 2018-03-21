@@ -1,4 +1,4 @@
-package testutil
+package ariestest
 
 import (
 	"testing"
