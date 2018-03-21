@@ -1,11 +1,9 @@
 package aries
 
 import (
-	"bytes"
-	"encoding/json"
 	"flag"
-	"io"
-	"io/ioutil"
+
+	"shanhu.io/misc/jsonfile"
 )
 
 // Main wraps the commin main function for web serving.
@@ -14,18 +12,6 @@ type Main struct {
 	Config interface{}
 	Serve  func(m *Main) error
 	Logger *Logger
-}
-
-// Run runs the service on the given address and config.
-func (m *Main) Run(config io.Reader) error {
-	if config != nil {
-		dec := json.NewDecoder(config)
-		if err := dec.Decode(m.Config); err != nil {
-			return err
-		}
-	}
-
-	return m.Serve(m)
 }
 
 // Main runs the main function body.
@@ -38,12 +24,11 @@ func (m *Main) Main() {
 	conf := flag.String("config", "config.json", "config file")
 	flag.Parse()
 
-	bs, err := ioutil.ReadFile(*conf)
-	if err != nil {
+	if err := jsonfile.Read(*conf, m.Config); err != nil {
 		m.Logger.Exit(err)
 	}
 
-	if err := m.Run(bytes.NewReader(bs)); err != nil {
+	if err := m.Serve(m); err != nil {
 		m.Logger.Exit(err)
 	}
 }

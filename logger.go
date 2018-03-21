@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"testing"
 
 	"shanhu.io/misc/errcode"
 )
@@ -31,17 +30,6 @@ type stdLog struct{}
 func (*stdLog) Print(s string) { log.Println(s) }
 
 var theStdLog = new(stdLog)
-
-type testLog struct {
-	t *testing.T
-}
-
-func (l *testLog) Print(s string) { l.t.Log(s) }
-
-// NewTestLogger creates a test logger.
-func NewTestLogger(t *testing.T) *Logger {
-	return NewLogger(&testLog{t})
-}
 
 // StdLogger returns the logger that logs to the default std log.
 func StdLogger() *Logger {
