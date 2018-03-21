@@ -12,7 +12,7 @@ import (
 type Main struct {
 	Addr   string
 	Config interface{}
-	Serve  func(addr string, logger *Logger) error
+	Serve  func(m *Main) error
 	Logger *Logger
 }
 
@@ -25,7 +25,7 @@ func (m *Main) Run(config io.Reader) error {
 		}
 	}
 
-	return m.Serve(m.Addr, m.Logger)
+	return m.Serve(m)
 }
 
 // Main runs the main function body.
