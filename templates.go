@@ -26,8 +26,15 @@ func (ts *Templates) tmpl(f string) string {
 	return filepath.Join(ts.path, f)
 }
 
-// Serve serves a webapp session with a particular template.
+// TemplatesJSON tells the Templates to print JSON data rather than
+// render the template.
+const TemplatesJSON = "!JSON"
+
+// Serve serves a data page using a particular template.
 func (ts *Templates) Serve(c *C, p string, dat interface{}) error {
+	if ts.path == TemplatesJSON {
+		return ReplyJSON(c, dat)
+	}
 	t, err := template.ParseFiles(ts.tmpl(p))
 	if err != nil {
 		Log(ts.logger, err.Error())
