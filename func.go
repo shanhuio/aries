@@ -2,6 +2,7 @@ package aries
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 )
 
@@ -32,6 +33,13 @@ func (f Func) ListenAndServe(addr string) error {
 		Handler: f,
 	}
 	return s.ListenAndServe()
+}
+
+// ServeAt launches the handler as an HTTP service at the given
+// listener.
+func (f Func) ServeAt(lis net.Listener) error {
+	s := &http.Server{Handler: f}
+	return s.Serve(lis)
 }
 
 // ListenAndServe launches the handler as an HTTP service.
