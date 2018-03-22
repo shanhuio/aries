@@ -34,6 +34,7 @@ func TestGetRepo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer s.Close()
 
 	repoa := NewGitRepo("shanhu.io/repoa", "repo/a")
 	repob := NewGitRepo("shanhu.io/repob", "repo/b")

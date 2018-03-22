@@ -18,6 +18,7 @@ func TestHostMux(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer s.Close()
 
 	c := s.Client()
 
