@@ -10,12 +10,11 @@ import (
 type Main struct {
 	Addr   string
 	Config interface{}
-	Serve  func(m *Main) error
 	Logger *Logger
 }
 
 // Main runs the main function body.
-func (m *Main) Main() {
+func (m *Main) Main(serve func(m *Main) error) {
 	if m.Logger == nil {
 		m.Logger = StdLogger()
 	}
@@ -28,7 +27,7 @@ func (m *Main) Main() {
 		m.Logger.Exit(err)
 	}
 
-	if err := m.Serve(m); err != nil {
+	if err := serve(m); err != nil {
 		m.Logger.Exit(err)
 	}
 }

@@ -50,7 +50,7 @@ func TestGetRepo(t *testing.T) {
 	for _, test := range []struct {
 		repo string
 		want *Repo
-	} {
+	}{
 		{"shanhu.io/repoa", repoa},
 		{"shanhu.io/repob", repob},
 		{"shanhu.io/repob/subpackage", repob},
@@ -69,7 +69,7 @@ func TestGetRepo(t *testing.T) {
 		}
 	}
 
-	for _, url := range []string {
+	for _, url := range []string{
 		"shanhu.io",
 		"smlrepo.com/xxx",
 	} {
