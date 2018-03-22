@@ -21,7 +21,11 @@ func (m *Main) Main(serve func(m *Main) error) {
 		m.Logger = StdLogger()
 	}
 
-	flag.StringVar(&m.Addr, "addr", m.Addr, "address to listen on")
+	if m.Listener == nil {
+		flag.StringVar(&m.Addr, "addr", m.Addr, "address to listen on")
+	} else {
+		m.Addr = "" // will use the given listener
+	}
 	conf := flag.String("config", "config.json", "config file")
 	flag.Parse()
 
