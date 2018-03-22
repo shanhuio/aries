@@ -14,11 +14,8 @@ type Config struct {
 func serve(m *aries.Main) error {
 	c := m.Config.(*Config)
 	h := http.FileServer(http.Dir(c.Dir))
-	s := &http.Server{
-		Addr:    m.Addr,
-		Handler: h,
-	}
-	return s.ListenAndServe()
+	s := &http.Server{Handler: h}
+	return s.Serve(m.Listener)
 }
 
 // Main is the main entrance for smlstatic binary
