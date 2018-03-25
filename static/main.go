@@ -1,29 +1,19 @@
 package static
 
 import (
-	"net/http"
-
 	"shanhu.io/aries"
 )
 
-// Config contains the config file for the smlstatic binary.
-type Config struct {
-	Dir string // Home directory
+type config struct {
+	Dir string // home directory
 }
 
-func serve(m *aries.Main) error {
-	c := m.Config.(*Config)
-	h := http.FileServer(http.Dir(c.Dir))
-	s := &http.Server{Handler: h}
-	return s.Serve(m.Listener)
+func build(c interface{}, _ *aries.Logger) (aries.Service, error) {
+	static := aries.NewStaticFiles(c.(*config).Dir)
+	return static, nil
 }
 
 // Main is the main entrance for smlstatic binary
 func Main() {
-	c := new(Config)
-	m := &aries.Main{
-		Addr:   "localhost:8000",
-		Config: c,
-	}
-	m.Main(serve)
+	aries.Main(build, new(config), "localhost:8000")
 }

@@ -2,48 +2,30 @@ package aries
 
 import (
 	"flag"
-	"net"
+	"net/http"
 
 	"shanhu.io/misc/jsonfile"
 )
 
-// Main wraps the commin main function for web serving.
-type Main struct {
-	Addr     string // default address to listen
-	Listener net.Listener
-	Config   interface{}
-	Logger   *Logger
-}
+// BuildFunc builds a service using the given config and logger.
+type BuildFunc func(config interface{}, logger *Logger) (Service, error)
 
-// Main runs the main function body.
-func (m *Main) Main(serve func(m *Main) error) {
-	if m.Logger == nil {
-		m.Logger = StdLogger()
-	}
-
-	if m.Listener == nil {
-		flag.StringVar(&m.Addr, "addr", m.Addr, "address to listen on")
-	} else {
-		m.Addr = "" // will use the given listener
-	}
+// Main launches a service with the given config structure, and default
+// address.
+func Main(b BuildFunc, config interface{}, addr string) {
+	flag.StringVar(&addr, "addr", addr, "address to listen on")
 	conf := flag.String("config", "config.json", "config file")
 	flag.Parse()
 
-	if err := jsonfile.Read(*conf, m.Config); err != nil {
-		m.Logger.Exit(err)
+	logger := StdLogger()
+	if err := jsonfile.Read(*conf, config); err != nil {
+		logger.Exit(err)
 	}
 
-	if m.Listener == nil {
-		lis, err := net.Listen("tcp", m.Addr)
-		if err != nil {
-			m.Logger.Exit(err)
-		}
-		m.Listener = lis
-
-		m.Logger.Printf("serving on %s", m.Addr)
+	s, err := b(config, logger)
+	if err != nil {
+		logger.Exit(err)
 	}
 
-	if err := serve(m); err != nil {
-		m.Logger.Exit(err)
-	}
+	logger.Exit(http.ListenAndServe(addr, Serve(s)))
 }
