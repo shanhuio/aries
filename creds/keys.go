@@ -30,7 +30,7 @@ func pemBlock(k *rsa.PrivateKey, pwd []byte) (*pem.Block, error) {
 
 // GenerateKey generates a private/public key pair with the given passphrase.
 func GenerateKey(passphrase []byte) (pri, pub []byte, err error) {
-	const keyLen = 2048
+	const keyLen = 4096
 	key, err := rsa.GenerateKey(rand.Reader, keyLen)
 	if err != nil {
 		return nil, nil, err
