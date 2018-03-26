@@ -101,7 +101,6 @@ func TestServiceSet(t *testing.T) {
 		}
 	}
 
-	t.Log("normal set")
 	for _, test := range []*testCase{
 		{"/style", "", 200, "style"},
 		{"/username", "", 200, ""},
@@ -121,7 +120,6 @@ func TestServiceSet(t *testing.T) {
 	si := httptest.NewServer(Serve(Func(set.ServeInternal)))
 	defer si.Close()
 
-	t.Log("internal set")
 	for _, test := range []*testCase{
 		{"/style", "", 200, "style"},
 		{"/username", "", 403, ""},
