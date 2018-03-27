@@ -6,10 +6,11 @@ import (
 )
 
 // Login login a server and fetch the token for the given user.
-func Login(c *httputil.Client, user string) error {
+func Login(c *httputil.Client, user, key string) error {
 	endPoint := &creds.EndPoint{
 		User:      user,
 		Server:    c.Server,
+		PemFile:   key,
 		Transport: c.Transport,
 		Homeless:  true,
 		NoTTY:     true,

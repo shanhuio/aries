@@ -17,6 +17,7 @@ func ne(err error) {
 func main() {
 	out := flag.String("out", "", "key path to output")
 	nopass := flag.Bool("nopass", false, "no passphrase")
+	nbit := flag.Int("nbit", 4096, "number of RSA bits")
 	flag.Parse()
 
 	var pwd []byte
@@ -27,7 +28,7 @@ func main() {
 		ne(err)
 	}
 
-	pri, pub, err := creds.GenerateKey(pwd)
+	pri, pub, err := creds.GenerateKey(pwd, *nbit)
 	ne(err)
 
 	if *out == "" {
