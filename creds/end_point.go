@@ -22,6 +22,9 @@ type EndPoint struct {
 
 	Homeless bool // If true, will not look into the home folder for caches.
 	NoTTY    bool // If true, will not fail if the key is encrypted.
+
+	// If skip checking key permission
+	NoPermCheck bool
 }
 
 func currentUser() (string, error) {

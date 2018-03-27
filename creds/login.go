@@ -15,7 +15,7 @@ import (
 func LoginWithKey(p *EndPoint) (*Creds, error) {
 	tty := !p.NoTTY
 
-	k, err := ReadPrivateKey(p.PemFile, tty)
+	k, err := readPrivateKey(p.PemFile, !p.NoPermCheck, tty)
 	if err != nil {
 		return nil, err
 	}

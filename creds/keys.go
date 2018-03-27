@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"io/ioutil"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -52,15 +53,11 @@ func GenerateKey(passphrase []byte, n int) (pri, pub []byte, err error) {
 	return priBuf.Bytes(), pub, nil
 }
 
-// ReadPrivateKey reads a private key from a key file.
-func ReadPrivateKey(pemFile string, tty bool) (*rsa.PrivateKey, error) {
-	bs, err := ReadPrivateFile(pemFile)
-	if err != nil {
-		return nil, err
-	}
+// ParsePrivateKey parses the given private key blob.
+func ParsePrivateKey(k string, bs []byte, tty bool) (*rsa.PrivateKey, error) {
 	b, _ := pem.Decode(bs)
 	if b == nil {
-		return nil, fmt.Errorf("%q decode failed", pemFile)
+		return nil, fmt.Errorf("%q decode failed", k)
 	}
 
 	if !x509.IsEncryptedPEMBlock(b) {
@@ -68,10 +65,10 @@ func ReadPrivateKey(pemFile string, tty bool) (*rsa.PrivateKey, error) {
 	}
 
 	if !tty {
-		return nil, fmt.Errorf("%q is encrypted", pemFile)
+		return nil, fmt.Errorf("%q is encrypted", k)
 	}
 
-	prompt := fmt.Sprintf("Passphrase for %s: ", pemFile)
+	prompt := fmt.Sprintf("Passphrase for %s: ", k)
 	pwd, err := ReadPassword(prompt)
 	if err != nil {
 		return nil, err
@@ -82,4 +79,34 @@ func ReadPrivateKey(pemFile string, tty bool) (*rsa.PrivateKey, error) {
 		return nil, err
 	}
 	return x509.ParsePKCS1PrivateKey(der)
+}
+
+func readPrivateKey(pemFile string, permCheck, tty bool) (
+	*rsa.PrivateKey, error,
+) {
+	var bs []byte
+	var err error
+	if permCheck {
+		bs, err = ReadPrivateFile(pemFile)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		bs, err = ioutil.ReadFile(pemFile)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return ParsePrivateKey(pemFile, bs, tty)
+}
+
+// ReadPrivateKey reads a private key from a key file.
+func ReadPrivateKey(pemFile string, tty bool) (*rsa.PrivateKey, error) {
+	bs, err := ReadPrivateFile(pemFile)
+	if err != nil {
+		return nil, err
+	}
+
+	return ParsePrivateKey(pemFile, bs, tty)
 }
