@@ -14,6 +14,7 @@ func Login(c *httputil.Client, user, key string) error {
 		Transport: c.Transport,
 		Homeless:  true,
 		NoTTY:     true,
+		NoPermCheck: true,
 	}
 
 	login := creds.NewLogin(endPoint)
