@@ -64,23 +64,23 @@ func ReadPrivateKey(pemFile string, tty bool) (*rsa.PrivateKey, error) {
 		return nil, fmt.Errorf("%q decode failed", pemFile)
 	}
 
-	if x509.IsEncryptedPEMBlock(b) {
-		if !tty {
-			return nil, fmt.Errorf("%q is encrypted", pemFile)
-		}
-
-		prompt := fmt.Sprintf("Passphrase for %s: ", pemFile)
-		pwd, err := ReadPassword(prompt)
-		if err != nil {
-			return nil, err
-		}
-
-		der, err := x509.DecryptPEMBlock(b, pwd)
-		if err != nil {
-			return nil, err
-		}
-		return x509.ParsePKCS1PrivateKey(der)
+	if !x509.IsEncryptedPEMBlock(b) {
+		return x509.ParsePKCS1PrivateKey(b.Bytes)
 	}
 
-	return x509.ParsePKCS1PrivateKey(b.Bytes)
+	if !tty {
+		return nil, fmt.Errorf("%q is encrypted", pemFile)
+	}
+
+	prompt := fmt.Sprintf("Passphrase for %s: ", pemFile)
+	pwd, err := ReadPassword(prompt)
+	if err != nil {
+		return nil, err
+	}
+
+	der, err := x509.DecryptPEMBlock(b, pwd)
+	if err != nil {
+		return nil, err
+	}
+	return x509.ParsePKCS1PrivateKey(der)
 }

@@ -12,8 +12,10 @@ import (
 
 // LoginWithKey uses the given PEM file to login a server, and returns the creds
 // if succeess.
-func LoginWithKey(user, server, pemFile string, tty bool) (*Creds, error) {
-	k, err := ReadPrivateKey(pemFile, tty)
+func LoginWithKey(p *EndPoint) (*Creds, error) {
+	tty := !p.NoTTY
+
+	k, err := ReadPrivateKey(p.PemFile, tty)
 	if err != nil {
 		return nil, err
 	}
@@ -24,18 +26,21 @@ func LoginWithKey(user, server, pemFile string, tty bool) (*Creds, error) {
 	}
 
 	req := &oauth.LoginRequest{
-		User:       user,
+		User:       p.User,
 		SignedTime: signed,
 	}
-	cs := &Creds{Server: server}
+	cs := &Creds{Server: p.Server}
 
-	c := httputil.NewClient(server)
-	if err := c.JSONCall("pubkey/signin", req, &cs.Creds); err != nil {
+	c := httputil.NewClient(p.Server)
+	if p.Transport != nil {
+		c.Transport = p.Transport
+	}
+	if err := c.JSONCall("/pubkey/signin", req, &cs.Creds); err != nil {
 		return nil, err
 	}
 
-	if cs.Creds.User != user {
-		return nil, fmt.Errorf("login as user %q, got %q", user, cs.User)
+	if cs.Creds.User != p.User {
+		return nil, fmt.Errorf("login as user %q, got %q", p.User, cs.User)
 	}
 
 	return cs, nil
@@ -43,50 +48,40 @@ func LoginWithKey(user, server, pemFile string, tty bool) (*Creds, error) {
 
 // Login is a helper stub to perform login actions.
 type Login struct {
-	server    string
-	user      string
-	pemFile   string
+	endPoint  *EndPoint
 	credsFile string
-	homeless  bool
-
-	tty bool // if it is running under a terminal
-
-	creds *Creds // cached creds
+	creds     *Creds // cached creds
 }
 
 // NewServerLogin returns a new server login with default user and pem file.
 func NewServerLogin(s string) (*Login, error) {
-	u, err := currentUser()
+	p, err := NewEndPoint(s)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewLogin(&LoginConfig{User: u, Server: s}), nil
+	return NewLogin(p), nil
 }
 
 // NewLogin creates a new login stub with the given config.
-func NewLogin(c *LoginConfig) *Login {
-	if c.User == "" {
+func NewLogin(p *EndPoint) *Login {
+	if p.User == "" {
 		panic("user is empty")
 	}
 
-	pemFile := c.PemFile
-	if pemFile == "" {
-		pemFile = "key.pem"
+	cp := *p
+	if cp.PemFile == "" {
+		cp.PemFile = "key.pem"
 	}
 
 	return &Login{
-		server:    c.Server,
-		user:      c.User,
-		pemFile:   pemFile,
-		credsFile: Filename(c.Server) + ".json",
-		homeless:  c.Homeless,
-		tty:       !c.NoTTY,
+		endPoint:  &cp,
+		credsFile: Filename(p.Server) + ".json",
 	}
 }
 
 func (lg *Login) readCreds() (*Creds, error) {
-	if lg.homeless {
+	if lg.endPoint.Homeless {
 		panic("login server is homeless")
 	}
 
@@ -99,17 +94,17 @@ func (lg *Login) readCreds() (*Creds, error) {
 }
 
 func (lg *Login) writeCreds(cs *Creds) error {
-	if lg.homeless {
+	if lg.endPoint.Homeless {
 		panic("login server is homeless")
 	}
 	return WriteHomeJSONFile(lg.credsFile, cs)
 }
 
 func (lg *Login) check(cs *Creds) (bool, error) {
-	if cs.User != lg.user {
+	if cs.User != lg.endPoint.User {
 		return false, nil
 	}
-	if cs.Server != lg.server {
+	if cs.Server != lg.endPoint.Server {
 		return false, nil
 	}
 
@@ -127,7 +122,7 @@ func (lg *Login) check(cs *Creds) (bool, error) {
 func (lg *Login) Token() (string, error) {
 	cs := lg.creds
 	if cs == nil {
-		if lg.homeless {
+		if lg.endPoint.Homeless {
 			// Nothing cached anywhere, just return a new one.
 			return lg.GetToken()
 		}
@@ -161,17 +156,17 @@ func (lg *Login) Token() (string, error) {
 // Do performs the login and returns the credentials.
 // It does not read or write the credential cache file.
 func (lg *Login) Do() (*Creds, error) {
-	pemFile := lg.pemFile
+	pemFile := lg.endPoint.PemFile
 
-	if !lg.homeless {
+	if !lg.endPoint.Homeless {
 		var err error
-		pemFile, err = HomeFile(pemFile)
+		lg.endPoint.PemFile, err = HomeFile(pemFile)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return LoginWithKey(lg.user, lg.server, pemFile, lg.tty)
+	return LoginWithKey(lg.endPoint)
 }
 
 // GetToken returns the login token for the login. It ignores and overwrites
@@ -186,7 +181,7 @@ func (lg *Login) GetToken() (string, error) {
 	lg.creds = cs
 
 	// If not homeless, also cache it in home directory.
-	if !lg.homeless {
+	if !lg.endPoint.Homeless {
 		if err := lg.writeCreds(cs); err != nil {
 			return "", err
 		}
