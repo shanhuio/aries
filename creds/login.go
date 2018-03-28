@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"shanhu.io/aries"
 	"shanhu.io/aries/oauth"
 	"shanhu.io/misc/signer"
 	"smallrepo.com/base/httputil"
@@ -78,6 +79,11 @@ func NewLogin(p *EndPoint) *Login {
 		endPoint:  &cp,
 		credsFile: Filename(p.Server) + ".json",
 	}
+}
+
+// NewRobotLogin is a shorthand for NewLogin(NewRobot())
+func NewRobotLogin(user, server, key string, env *aries.Env) *Login {
+	return NewLogin(NewRobot(user, server, key, env))
 }
 
 func (lg *Login) readCreds() (*Creds, error) {
@@ -189,6 +195,18 @@ func (lg *Login) GetToken() (string, error) {
 	return cs.Creds.Token, nil
 }
 
+// Dial creates an token client.
+func (lg *Login) Dial() (*httputil.Client, error) {
+	tok, err := lg.Token()
+	if err != nil {
+		return nil, err
+	}
+
+	c := httputil.NewTokenClient(lg.endPoint.Server, tok)
+	c.Transport = lg.endPoint.Transport
+	return c, nil
+}
+
 // LoginServer uses the default setting to login into a server.
 func LoginServer(server string) (string, error) {
 	login, err := NewServerLogin(server)
@@ -205,4 +223,10 @@ func Dial(server string) (*httputil.Client, error) {
 		return nil, err
 	}
 	return httputil.NewTokenClient(server, tok), nil
+}
+
+// DialEndPoint creates a token client with the given endpoint.
+func DialEndPoint(p *EndPoint) (*httputil.Client, error) {
+	login := NewLogin(p)
+	return login.Dial()
 }

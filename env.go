@@ -14,6 +14,9 @@ type Env struct {
 
 	// For the server to send outgoing HTTP requests.
 	Transport http.RoundTripper
+
+	// If this is testing environment.
+	Testing bool
 }
 
 // BuildFunc builds a service using the given config and logger.
