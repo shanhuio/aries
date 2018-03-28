@@ -61,6 +61,20 @@ func getRepo(c *http.Client, pkg string) (*Repo, error) {
 	return check, nil
 }
 
+func commonGitRepo(pkg string, parts []string) (*Repo, error) {
+	if len(parts) < 3 {
+		return nil, fmt.Errorf("cannot find repo for pkg: %q", pkg)
+	}
+
+	repoPath := path.Join(parts[:3]...)
+
+	return &Repo{
+		ImportRoot: repoPath,
+		VCS:        "git",
+		VCSRoot:    "https://" + repoPath,
+	}, nil
+}
+
 // GetRepo gets the repo meta data for a particular package.
 func GetRepo(c *http.Client, pkg string) (*Repo, error) {
 	parts, err := pathutil.Split(pkg)
@@ -70,18 +84,10 @@ func GetRepo(c *http.Client, pkg string) (*Repo, error) {
 
 	domain := parts[0]
 	switch domain {
-	case "github.com", "bitbucket.org":
-		if len(parts) < 3 {
-			return nil, fmt.Errorf("cannot find repo for pkg: %q", pkg)
-		}
-
-		repoPath := path.Join(parts[:3]...)
-
-		return &Repo{
-			ImportRoot: repoPath,
-			VCS:        "git",
-			VCSRoot:    "https://" + repoPath,
-		}, nil
+	case "github.com":
+		return commonGitRepo(pkg, parts)
+	case "bitbucket.org":
+		return commonGitRepo(pkg, parts)
 	}
 
 	for i, part := range parts {
