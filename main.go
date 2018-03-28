@@ -7,15 +7,6 @@ import (
 	"shanhu.io/misc/jsonfile"
 )
 
-// Env provides the generic config structure for starting a service.
-type Env struct {
-	Config interface{}
-	Logger *Logger
-}
-
-// BuildFunc builds a service using the given config and logger.
-type BuildFunc func(env *Env) (Service, error)
-
 // Main launches a service with the given config structure, and default
 // address.
 func Main(b BuildFunc, config interface{}, addr string) {
