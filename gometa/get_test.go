@@ -3,7 +3,9 @@ package gometa
 import (
 	"testing"
 
+	"fmt"
 	"reflect"
+	"strings"
 
 	"shanhu.io/aries"
 	"shanhu.io/aries/ariestest"
@@ -22,6 +24,19 @@ func newTestServer() *testServer {
 	}
 }
 
+func ogTypeMeta(s string) string {
+	return fmt.Sprintf(`<meta name="og:type" content="%s"/>`, s)
+}
+
+func serveFakeBitBucket(c *aries.C) error {
+	if strings.HasPrefix(c.Path, "/h8liu/repod") {
+		fmt.Fprintln(c.Resp, ogTypeMeta("bitbucket:gitrepository"))
+	} else if strings.HasPrefix(c.Path, "/h8liu/repo-hg") {
+		fmt.Fprintln(c.Resp, ogTypeMeta("bitbucket:hgrepository"))
+	}
+	return aries.Miss
+}
+
 func (s *testServer) Serve(c *aries.C) error {
 	if IsGoGetRequest(c.Req) {
 		return s.m.Serve(c)
@@ -30,7 +45,10 @@ func (s *testServer) Serve(c *aries.C) error {
 }
 
 func TestGetRepo(t *testing.T) {
-	s, err := ariestest.HTTPSServer("shanhu.io", newTestServer())
+	s, err := ariestest.HTTPSServers(map[string]aries.Service{
+		"shanhu.io":     newTestServer(),
+		"bitbucket.org": aries.Func(serveFakeBitBucket),
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,6 +64,11 @@ func TestGetRepo(t *testing.T) {
 		"bitbucket.org/h8liu/repod",
 		"https://bitbucket.org/h8liu/repod",
 	)
+	repoHG := &Repo{
+		ImportRoot: "bitbucket.org/h8liu/repo-hg",
+		VCS:        "hg",
+		VCSRoot:    "https://bitbucket.org/h8liu/repo-hg",
+	}
 
 	c := s.Client()
 	for _, test := range []struct {
@@ -58,6 +81,7 @@ func TestGetRepo(t *testing.T) {
 		{"github.com/h8liu/repoc", repoc},
 		{"github.com/h8liu/repoc/xxx", repoc},
 		{"bitbucket.org/h8liu/repod/xxx", repod},
+		{"bitbucket.org/h8liu/repo-hg/xxx", repoHG},
 	} {
 		repo, err := GetRepo(c, test.repo)
 		if err != nil {

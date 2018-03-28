@@ -10,6 +10,28 @@ import (
 	"shanhu.io/misc/pathutil"
 )
 
+func getBitBucketRepoType(c *http.Client, pkg string) (string, error) {
+	url, err := url.Parse("https://" + pkg)
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := c.Get(url.String())
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	t, err := bitBucketRepoType(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	if err := resp.Body.Close(); err != nil {
+		return "", err
+	}
+	return t, nil
+}
+
 func get(c *http.Client, pkg string) (*Repo, error) {
 	url, err := url.Parse("https://" + pkg)
 	if err != nil {
@@ -21,7 +43,6 @@ func get(c *http.Client, pkg string) (*Repo, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	defer resp.Body.Close()
 
 	repo, err := ParseGoImport(resp.Body, pkg)
@@ -61,7 +82,7 @@ func getRepo(c *http.Client, pkg string) (*Repo, error) {
 	return check, nil
 }
 
-func commonGitRepo(pkg string, parts []string) (*Repo, error) {
+func commonRepo(pkg, vcs string, parts []string) (*Repo, error) {
 	if len(parts) < 3 {
 		return nil, fmt.Errorf("cannot find repo for pkg: %q", pkg)
 	}
@@ -70,7 +91,7 @@ func commonGitRepo(pkg string, parts []string) (*Repo, error) {
 
 	return &Repo{
 		ImportRoot: repoPath,
-		VCS:        "git",
+		VCS:        vcs,
 		VCSRoot:    "https://" + repoPath,
 	}, nil
 }
@@ -85,9 +106,13 @@ func GetRepo(c *http.Client, pkg string) (*Repo, error) {
 	domain := parts[0]
 	switch domain {
 	case "github.com":
-		return commonGitRepo(pkg, parts)
+		return commonRepo(pkg, "git", parts)
 	case "bitbucket.org":
-		return commonGitRepo(pkg, parts)
+		repoType, err := getBitBucketRepoType(c, pkg)
+		if err != nil {
+			return nil, fmt.Errorf("pkg %q: %s", pkg, err)
+		}
+		return commonRepo(pkg, repoType, parts)
 	}
 
 	for i, part := range parts {

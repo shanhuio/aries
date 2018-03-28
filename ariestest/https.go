@@ -7,11 +7,9 @@ import (
 	"shanhu.io/aries/https/httpstest"
 )
 
-// MultiHTTPSServer creates an HTTPS server that serves a set of
+// HTTPSServers creates an HTTPS server that serves a set of
 // domains.
-func MultiHTTPSServer(
-	sites map[string]aries.Service,
-) (*httpstest.Server, error) {
+func HTTPSServers(sites map[string]aries.Service) (*httpstest.Server, error) {
 	m := aries.NewHostMux()
 	var domains []string
 	for domain, s := range sites {
@@ -25,7 +23,7 @@ func MultiHTTPSServer(
 
 // HTTPSServer creates an HTTPS server that serves for a domain.
 func HTTPSServer(domain string, s aries.Service) (*httpstest.Server, error) {
-	return MultiHTTPSServer(map[string]aries.Service{
+	return HTTPSServers(map[string]aries.Service{
 		domain: s,
 	})
 }

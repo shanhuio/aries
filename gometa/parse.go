@@ -26,12 +26,11 @@ func attrValue(attrs []xml.Attr, name string) string {
 	return ""
 }
 
-// ParseGoImport takes an HTML page and parses for the go-import meta tag.
-func ParseGoImport(r io.Reader, pkg string) (*Repo, error) {
+func findMeta(r io.Reader, name string) ([]string, error) {
+	var ret []string
 	dec := xml.NewDecoder(r)
 	dec.CharsetReader = charsetReader
 	dec.Strict = false
-
 	for {
 		t, err := dec.RawToken()
 		if err == io.EOF {
@@ -58,11 +57,40 @@ func ParseGoImport(r io.Reader, pkg string) (*Repo, error) {
 			continue
 		}
 
-		if attrValue(e.Attr, "name") != "go-import" {
+		if attrValue(e.Attr, "name") != name {
 			continue
 		}
 
-		fields := strings.Fields(attrValue(e.Attr, "content"))
+		ret = append(ret, attrValue(e.Attr, "content"))
+	}
+	return ret, nil
+}
+
+func bitBucketRepoType(r io.Reader) (string, error) {
+	metas, err := findMeta(r, "og:type")
+	if err != nil {
+		return "", err
+	}
+	for _, meta := range metas {
+		switch meta {
+		case "bitbucket:hgrepository":
+			return "hg", nil
+		case "bitbucket:gitrepository":
+			return "git", nil
+		}
+	}
+	return "", fmt.Errorf("cannot detect repo type")
+}
+
+// ParseGoImport takes an HTML page and parses for the go-import meta tag.
+func ParseGoImport(r io.Reader, pkg string) (*Repo, error) {
+	metas, err := findMeta(r, "go-import")
+	if err != nil {
+		return nil, err
+	}
+
+	for _, meta := range metas {
+		fields := strings.Fields(meta)
 		if len(fields) != 3 {
 			continue
 		}
