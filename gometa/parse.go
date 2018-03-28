@@ -1,6 +1,7 @@
 package gometa
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -67,19 +68,14 @@ func findMeta(r io.Reader, name string) ([]string, error) {
 }
 
 func bitBucketRepoType(r io.Reader) (string, error) {
-	metas, err := findMeta(r, "og:type")
-	if err != nil {
+	dec := json.NewDecoder(r)
+	var dat struct {
+		SCM string `json:"scm"`
+	}
+	if err := dec.Decode(&dat); err != nil {
 		return "", err
 	}
-	for _, meta := range metas {
-		switch meta {
-		case "bitbucket:hgrepository":
-			return "hg", nil
-		case "bitbucket:gitrepository":
-			return "git", nil
-		}
-	}
-	return "", fmt.Errorf("cannot detect repo type")
+	return dat.SCM, nil
 }
 
 // ParseGoImport takes an HTML page and parses for the go-import meta tag.

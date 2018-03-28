@@ -10,8 +10,15 @@ import (
 	"shanhu.io/misc/pathutil"
 )
 
-func getBitBucketRepoType(c *http.Client, pkg string) (string, error) {
-	url, err := url.Parse("https://" + pkg)
+func getBitBucketRepoType(c *http.Client, pkgParts []string) (
+	string, error,
+) {
+	if len(pkgParts) < 3 {
+		return "", fmt.Errorf("invalid bitbucket repo")
+	}
+
+	p := fmt.Sprintf("%s/%s", pkgParts[1], pkgParts[2])
+	url, err := url.Parse("https://api.bitbucket.org/2.0/repositories/" + p)
 	if err != nil {
 		return "", err
 	}
@@ -108,7 +115,7 @@ func GetRepo(c *http.Client, pkg string) (*Repo, error) {
 	case "github.com":
 		return commonRepo(pkg, "git", parts)
 	case "bitbucket.org":
-		repoType, err := getBitBucketRepoType(c, pkg)
+		repoType, err := getBitBucketRepoType(c, parts)
 		if err != nil {
 			return nil, fmt.Errorf("pkg %q: %s", pkg, err)
 		}

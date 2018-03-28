@@ -24,15 +24,11 @@ func newTestServer() *testServer {
 	}
 }
 
-func ogTypeMeta(s string) string {
-	return fmt.Sprintf(`<meta name="og:type" content="%s"/>`, s)
-}
-
 func serveFakeBitBucket(c *aries.C) error {
-	if strings.HasPrefix(c.Path, "/h8liu/repod") {
-		fmt.Fprintln(c.Resp, ogTypeMeta("bitbucket:gitrepository"))
-	} else if strings.HasPrefix(c.Path, "/h8liu/repo-hg") {
-		fmt.Fprintln(c.Resp, ogTypeMeta("bitbucket:hgrepository"))
+	if strings.Index(c.Path, "repod") >= 0 {
+		fmt.Fprintln(c.Resp, `{"scm":"git"}`)
+	} else if strings.Index(c.Path, "repo-hg") >= 0 {
+		fmt.Fprintln(c.Resp, `{"scm":"hg"}`)
 	}
 	return aries.Miss
 }
@@ -46,8 +42,8 @@ func (s *testServer) Serve(c *aries.C) error {
 
 func TestGetRepo(t *testing.T) {
 	s, err := ariestest.HTTPSServers(map[string]aries.Service{
-		"shanhu.io":     newTestServer(),
-		"bitbucket.org": aries.Func(serveFakeBitBucket),
+		"shanhu.io":         newTestServer(),
+		"api.bitbucket.org": aries.Func(serveFakeBitBucket),
 	})
 	if err != nil {
 		t.Fatal(err)
