@@ -27,5 +27,6 @@ func Main(b BuildFunc, config interface{}, addr string) {
 		logger.Exit(err)
 	}
 
+	logger.Printf("serve on %s", addr)
 	logger.Exit(http.ListenAndServe(addr, Serve(s)))
 }
