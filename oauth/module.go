@@ -6,6 +6,7 @@ import (
 
 	"shanhu.io/aries"
 	"shanhu.io/misc/errcode"
+	"shanhu.io/misc/rsautil"
 	"shanhu.io/misc/signer"
 )
 
@@ -99,7 +100,7 @@ func (mod *Module) Auth() aries.Auth {
 				return err
 			}
 
-			k, err := unmarshalPublicKey(keyBytes)
+			k, err := rsautil.ParsePublicKey(keyBytes)
 			if err != nil {
 				return err
 			}
