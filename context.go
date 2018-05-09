@@ -1,4 +1,4 @@
-package aries
+package aries // import "shanhu.io/aries"
 
 import (
 	"net/http"
