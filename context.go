@@ -1,6 +1,7 @@
 package aries // import "shanhu.io/aries"
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"time"
@@ -15,8 +16,9 @@ type C struct {
 	User      string
 	UserLevel int // 0 for normal user. 0 with empty User is anonymous.
 
-	Req  *http.Request
-	Resp http.ResponseWriter
+	Req     *http.Request
+	Resp    http.ResponseWriter
+	Context context.Context
 
 	HTTPS bool
 
@@ -38,11 +40,12 @@ func NewContext(w http.ResponseWriter, req *http.Request) *C {
 	}
 
 	return &C{
-		Path:  u.Path,
-		Resp:  w,
-		Req:   req,
-		HTTPS: isHTTPS,
-		Data:  make(map[string]interface{}),
+		Path:    u.Path,
+		Resp:    w,
+		Req:     req,
+		Context: req.Context(),
+		HTTPS:   isHTTPS,
+		Data:    make(map[string]interface{}),
 
 		route: newRoute(u.Path),
 	}
