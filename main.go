@@ -4,7 +4,7 @@ import (
 	"flag"
 	"net/http"
 
-	"shanhu.io/misc/jsonfile"
+	"shanhu.io/misc/jsonutil"
 )
 
 // Main launches a service with the given config structure, and default
@@ -15,7 +15,7 @@ func Main(b BuildFunc, config interface{}, addr string) {
 	flag.Parse()
 
 	logger := StdLogger()
-	if err := jsonfile.Read(*conf, config); err != nil {
+	if err := jsonutil.ReadFile(*conf, config); err != nil {
 		logger.Exit(err)
 	}
 
