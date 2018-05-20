@@ -6,6 +6,5 @@ func Poke(server string, path string) error {
 	if err != nil {
 		return err
 	}
-
-	return c.Poke("/api/rebuild")
+	return c.Poke(path)
 }
