@@ -1,32 +1,43 @@
 package oauth
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 
 	"golang.org/x/oauth2"
+	"shanhu.io/aries"
 	"shanhu.io/misc/signer"
 )
 
-type client struct {
+// Client is an oauth client for oauth2 exchanges.
+type Client struct {
 	config *oauth2.Config
 	states *signer.Sessions
 }
 
-func newClient(c *oauth2.Config, states *signer.Sessions) *client {
-	return &client{
+// NewClient creates a new oauth client for oauth2 exchnages.
+func NewClient(c *oauth2.Config, states *signer.Sessions) *Client {
+	return &Client{
 		config: c,
 		states: states,
 	}
 }
 
-func (c *client) signInURL() string {
+// SignInURL returns the online signin URL for redirection.
+func (c *Client) SignInURL() string {
 	return c.config.AuthCodeURL(c.states.NewState())
 }
 
-func (c *client) token(req *http.Request) (*oauth2.Token, error) {
-	state, code := stateCode(req)
+// OfflineSignInURL returns the offline signin URL for redirection.
+func (c *Client) OfflineSignInURL() string {
+	state := c.states.NewState()
+	return c.config.AuthCodeURL(state, oauth2.AccessTypeOffline)
+}
+
+// Token extracts the oauth2 access token from the request.
+func (c *Client) Token(ctx *aries.C) (*oauth2.Token, error) {
+	state, code := stateCode(ctx.Req)
 	if state == "" {
 		return nil, fmt.Errorf("invalid oauth redirect")
 	}
@@ -36,7 +47,7 @@ func (c *client) token(req *http.Request) (*oauth2.Token, error) {
 		return nil, fmt.Errorf("state invalid")
 	}
 
-	tok, err := c.config.Exchange(oauth2.NoContext, code)
+	tok, err := c.config.Exchange(ctx.Context, code)
 	if err != nil {
 		return nil, fmt.Errorf("exchange failed: %v", err)
 	}
@@ -46,7 +57,10 @@ func (c *client) token(req *http.Request) (*oauth2.Token, error) {
 	return tok, nil
 }
 
-func (c *client) get(tok *oauth2.Token, url string) ([]byte, error) {
+// Get gets an URL using the given token.
+func (c *Client) Get(
+	ctx context.Context, tok *oauth2.Token, url string,
+) ([]byte, error) {
 	callClient := c.config.Client(oauth2.NoContext, tok)
 	resp, err := callClient.Get(url)
 	if err != nil {

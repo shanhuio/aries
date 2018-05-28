@@ -123,12 +123,12 @@ func (mod *Module) Auth() aries.Auth {
 
 	if mod.github != nil {
 		r.File("github/signin", func(c *aries.C) error {
-			c.Redirect(mod.github.signInURL())
+			c.Redirect(mod.github.client.SignInURL())
 			return nil
 		})
 
 		r.File("github/callback", func(c *aries.C) error {
-			user, err := mod.github.callback(c.Req)
+			user, err := mod.github.callback(c)
 			if err != nil {
 				log.Println("github callback: ", err)
 				return errcode.Internalf("callback failed")
@@ -139,12 +139,12 @@ func (mod *Module) Auth() aries.Auth {
 
 	if mod.google != nil {
 		r.File("google/signin", func(c *aries.C) error {
-			c.Redirect(mod.google.signInURL())
+			c.Redirect(mod.google.client.SignInURL())
 			return nil
 		})
 
 		r.File("google/callback", func(c *aries.C) error {
-			user, err := mod.google.callback(c.Req)
+			user, err := mod.google.callback(c)
 			if err != nil {
 				log.Println("google callback: ", err)
 				return errcode.Internalf("callback failed")

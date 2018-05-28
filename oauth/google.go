@@ -3,11 +3,10 @@ package oauth
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"golang.org/x/oauth2"
 	goauth2 "golang.org/x/oauth2/google"
-
+	"shanhu.io/aries"
 	"shanhu.io/misc/signer"
 )
 
@@ -18,10 +17,10 @@ type GoogleApp struct {
 	RedirectURL string
 }
 
-type google struct{ *client }
+type google struct{ client *Client }
 
 func newGoogle(app *GoogleApp, s *signer.Sessions) *google {
-	c := newClient(
+	c := NewClient(
 		&oauth2.Config{
 			ClientID:     app.ID,
 			ClientSecret: app.Secret,
@@ -35,14 +34,14 @@ func newGoogle(app *GoogleApp, s *signer.Sessions) *google {
 	return &google{c}
 }
 
-func (g *google) callback(req *http.Request) (string, error) {
-	tok, err := g.client.token(req)
+func (g *google) callback(c *aries.C) (string, error) {
+	tok, err := g.client.Token(c)
 	if err != nil {
 		return "", err
 	}
 
 	const url = "https://www.googleapis.com/oauth2/v3/userinfo"
-	bs, err := g.client.get(tok, url)
+	bs, err := g.client.Get(c.Context, tok, url)
 	if err != nil {
 		return "", err
 	}

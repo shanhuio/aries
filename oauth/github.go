@@ -3,11 +3,10 @@ package oauth
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"golang.org/x/oauth2"
 	gh "golang.org/x/oauth2/github"
-
+	"shanhu.io/aries"
 	"shanhu.io/misc/signer"
 )
 
@@ -17,10 +16,10 @@ type GitHubApp struct {
 	Secret string
 }
 
-type github struct{ *client }
+type github struct{ client *Client }
 
 func newGitHub(app *GitHubApp, s *signer.Sessions) *github {
-	c := newClient(
+	c := NewClient(
 		&oauth2.Config{
 			ClientID:     app.ID,
 			ClientSecret: app.Secret,
@@ -28,16 +27,16 @@ func newGitHub(app *GitHubApp, s *signer.Sessions) *github {
 			Endpoint:     gh.Endpoint,
 		}, s,
 	)
-	return &github{c}
+	return &github{client: c}
 }
 
-func (g *github) callback(req *http.Request) (string, error) {
-	tok, err := g.client.token(req)
+func (g *github) callback(c *aries.C) (string, error) {
+	tok, err := g.client.Token(c)
 	if err != nil {
 		return "", err
 	}
 
-	bs, err := g.client.get(tok, "https://api.github.com/user")
+	bs, err := g.client.Get(c.Context, tok, "https://api.github.com/user")
 	if err != nil {
 		return "", err
 	}
