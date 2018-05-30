@@ -1,4 +1,4 @@
-package htmlgen
+package webgen
 
 import (
 	"fmt"
