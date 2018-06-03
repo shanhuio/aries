@@ -30,26 +30,26 @@ func newGitHub(app *GitHubApp, s *signer.Sessions) *github {
 	return &github{client: c}
 }
 
-func (g *github) callback(c *aries.C) (string, error) {
-	tok, err := g.client.Token(c)
+func (g *github) callback(c *aries.C) (string, *State, error) {
+	tok, state, err := g.client.TokenState(c)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	bs, err := g.client.Get(c.Context, tok, "https://api.github.com/user")
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	var user struct {
 		Login string `json:"login"`
 	}
 	if err := json.Unmarshal(bs, &user); err != nil {
-		return "", err
+		return "", nil, err
 	}
 	ret := user.Login
 	if ret == "" {
-		return "", fmt.Errorf("empty login")
+		return "", nil, fmt.Errorf("empty login")
 	}
-	return ret, nil
+	return ret, state, nil
 }

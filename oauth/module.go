@@ -77,7 +77,7 @@ func (mod *Module) Auth() aries.Auth {
 	if mod.c.ByPass != "" {
 		r.File("signin-bypass", func(c *aries.C) error {
 			mod.SetupCookie(c, mod.c.ByPass)
-			mod.signInRedirect(c)
+			c.Redirect(mod.redirect)
 			return nil
 		})
 	}
@@ -123,33 +123,35 @@ func (mod *Module) Auth() aries.Auth {
 
 	if mod.github != nil {
 		r.File("github/signin", func(c *aries.C) error {
-			c.Redirect(mod.github.client.SignInURL())
+			state := &State{Dest: mod.redirect}
+			c.Redirect(mod.github.client.SignInURL(state))
 			return nil
 		})
 
 		r.File("github/callback", func(c *aries.C) error {
-			user, err := mod.github.callback(c)
+			user, state, err := mod.github.callback(c)
 			if err != nil {
 				log.Println("github callback: ", err)
 				return errcode.Internalf("callback failed")
 			}
-			return mod.signIn(c, "github", user)
+			return mod.signIn(c, "github", user, state.Dest)
 		})
 	}
 
 	if mod.google != nil {
 		r.File("google/signin", func(c *aries.C) error {
-			c.Redirect(mod.google.client.SignInURL())
+			state := &State{Dest: mod.redirect}
+			c.Redirect(mod.google.client.SignInURL(state))
 			return nil
 		})
 
 		r.File("google/callback", func(c *aries.C) error {
-			user, err := mod.google.callback(c)
+			user, state, err := mod.google.callback(c)
 			if err != nil {
 				log.Println("google callback: ", err)
 				return errcode.Internalf("callback failed")
 			}
-			return mod.signIn(c, "google", user)
+			return mod.signIn(c, "google", user, state.Dest)
 		})
 	}
 
@@ -172,11 +174,7 @@ func (mod *Module) SetupCookie(c *aries.C, user string) {
 	c.WriteCookie("session", session, expires)
 }
 
-func (mod *Module) signInRedirect(c *aries.C) {
-	c.Redirect(mod.redirect)
-}
-
-func (mod *Module) signIn(c *aries.C, method, user string) error {
+func (mod *Module) signIn(c *aries.C, method, user, dest string) error {
 	if mod.c.LoginCheck == nil {
 		return nil
 	}
@@ -187,7 +185,7 @@ func (mod *Module) signIn(c *aries.C, method, user string) error {
 	}
 	if id != "" {
 		mod.SetupCookie(c, id)
-		mod.signInRedirect(c)
+		c.Redirect(dest)
 	}
 	return nil
 }

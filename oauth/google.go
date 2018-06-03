@@ -34,27 +34,27 @@ func newGoogle(app *GoogleApp, s *signer.Sessions) *google {
 	return &google{c}
 }
 
-func (g *google) callback(c *aries.C) (string, error) {
-	tok, err := g.client.Token(c)
+func (g *google) callback(c *aries.C) (string, *State, error) {
+	tok, state, err := g.client.TokenState(c)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	const url = "https://www.googleapis.com/oauth2/v3/userinfo"
 	bs, err := g.client.Get(c.Context, tok, url)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	var user struct {
 		Email string `json:"email"`
 	}
 	if err := json.Unmarshal(bs, &user); err != nil {
-		return "", err
+		return "", nil, err
 	}
 	ret := user.Email
 	if ret == "" {
-		return "", fmt.Errorf("empty login")
+		return "", nil, fmt.Errorf("empty login")
 	}
-	return ret, nil
+	return ret, state, nil
 }
