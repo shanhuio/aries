@@ -7,34 +7,6 @@ import (
 	"golang.org/x/net/html/atom"
 )
 
-func addChildren(n *html.Node, children ...interface{}) {
-	for _, child := range children {
-		switch c := child.(type) {
-		case Attrs:
-			setAttrs(n, c)
-		case string:
-			n.AppendChild(text(c))
-		case *html.Node:
-			n.AppendChild(c)
-		case *Node:
-			n.AppendChild(c.Node)
-		}
-	}
-}
-
-// Node wraps around an html node.
-type Node struct{ *html.Node }
-
-// Text creates a text node.
-func Text(s string) *Node { return &Node{text(s)} }
-
-func text(s string) *html.Node {
-	return &html.Node{
-		Type: html.TextNode,
-		Data: s,
-	}
-}
-
 // Element create a new element.
 func Element(n interface{}, children ...interface{}) *Node {
 	var ret *html.Node
@@ -56,11 +28,6 @@ func Element(n interface{}, children ...interface{}) *Node {
 
 	addChildren(ret, children...)
 	return &Node{ret}
-}
-
-// Add appends more stuff into the node.
-func (n *Node) Add(children ...interface{}) {
-	addChildren(n.Node, children...)
 }
 
 func bind(a atom.Atom) func(c ...interface{}) *Node {
@@ -92,4 +59,12 @@ var (
 // NewMeta create a new meta tag.
 func NewMeta(key, value string) *Node {
 	return Meta(Attrs{key: value})
+}
+
+// NewLink creates a new web link.
+func NewLink(href string, children ...interface{}) *Node {
+	var stuff []interface{}
+	stuff = append(stuff, Attrs{"href": href})
+	stuff = append(stuff, children...)
+	return A(stuff...)
 }

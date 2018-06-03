@@ -1,6 +1,7 @@
 package webgen
 
 import (
+	"bytes"
 	"io"
 
 	"golang.org/x/net/html"
@@ -15,6 +16,10 @@ type Page struct {
 
 // Render renders a page.
 func Render(w io.Writer, page *Page, body *Node) error {
+	if page == nil {
+		page = new(Page) // just use empty value for default.
+	}
+
 	if !page.NoDocType {
 		if _, err := io.WriteString(w, "<!doctype html>\n"); err != nil {
 			return err
@@ -34,4 +39,13 @@ func Render(w io.Writer, page *Page, body *Node) error {
 	}
 	_, err := io.WriteString(w, "\n")
 	return err
+}
+
+// RenderString renders a page into a string.
+func RenderString(page *Page, body *Node) (string, error) {
+	buf := new(bytes.Buffer)
+	if err := Render(buf, page, body); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }
