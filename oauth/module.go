@@ -12,11 +12,12 @@ import (
 
 // Module is a module that handles stuff related to oauth.
 type Module struct {
-	c        *Config
-	github   *github
-	google   *google
-	sessions *signer.Sessions
-	redirect string
+	c            *Config
+	github       *github
+	google       *google
+	digitalOcean *digitalOcean
+	sessions     *signer.Sessions
+	redirect     string
 
 	sessionRefresh time.Duration
 }
@@ -55,6 +56,9 @@ func NewModule(c *Config) *Module {
 	}
 	if c.Google != nil {
 		ret.google = newGoogle(c.Google, states)
+	}
+	if c.DigitalOcean != nil {
+		ret.digitalOcean = newDigitalOcean(c.DigitalOcean, states)
 	}
 	return ret
 }
@@ -122,37 +126,20 @@ func (mod *Module) Auth() aries.Auth {
 	}
 
 	if mod.github != nil {
-		r.File("github/signin", func(c *aries.C) error {
-			state := &State{Dest: mod.redirect}
-			c.Redirect(mod.github.client.SignInURL(state))
-			return nil
-		})
-
-		r.File("github/callback", func(c *aries.C) error {
-			user, state, err := mod.github.callback(c)
-			if err != nil {
-				log.Println("github callback: ", err)
-				return errcode.Internalf("callback failed")
-			}
-			return mod.signIn(c, "github", user, state.Dest)
-		})
+		r.File("github/signin", mod.signInHandler(mod.github.client))
+		r.File("github/callback", mod.callbackHandler("github", mod.github))
 	}
 
 	if mod.google != nil {
-		r.File("google/signin", func(c *aries.C) error {
-			state := &State{Dest: mod.redirect}
-			c.Redirect(mod.google.client.SignInURL(state))
-			return nil
-		})
+		r.File("google/signin", mod.signInHandler(mod.google.client))
+		r.File("google/callback", mod.callbackHandler("google", mod.google))
+	}
 
-		r.File("google/callback", func(c *aries.C) error {
-			user, state, err := mod.google.callback(c)
-			if err != nil {
-				log.Println("google callback: ", err)
-				return errcode.Internalf("callback failed")
-			}
-			return mod.signIn(c, "google", user, state.Dest)
-		})
+	if do := mod.digitalOcean; do != nil {
+		r.File("digitalocean/signin", mod.signInHandler(do.client))
+		r.File("digitalocean/callback", mod.callbackHandler(
+			"digitalocean", do,
+		))
 	}
 
 	return &service{
@@ -246,3 +233,23 @@ func (mod *Module) Check(c *aries.C) (bool, error) {
 
 // AuthSetup setups the user authorization context.
 func (mod *Module) AuthSetup(c *aries.C) { mod.Check(c) }
+
+func (mod *Module) signInHandler(client *Client) aries.Func {
+	return func(c *aries.C) error {
+		state := &State{Dest: mod.redirect}
+		c.Redirect(client.SignInURL(state))
+		return nil
+	}
+}
+
+func (mod *Module) callbackHandler(method string, x idExchange) aries.Func {
+	return func(c *aries.C) error {
+		user, state, err := x.callback(c)
+		if err != nil {
+			log.Printf("%s callback: %s", method, err)
+			return errcode.Internalf("callback failed")
+		}
+
+		return mod.signIn(c, method, user, state.Dest)
+	}
+}

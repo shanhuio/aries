@@ -73,7 +73,7 @@ func (c *Client) TokenState(ctx *aries.C) (*oauth2.Token, *State, error) {
 func (c *Client) Get(
 	ctx context.Context, tok *oauth2.Token, url string,
 ) ([]byte, error) {
-	callClient := c.config.Client(oauth2.NoContext, tok)
+	callClient := c.config.Client(ctx, tok)
 	resp, err := callClient.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("oauth2 get: %v", err)

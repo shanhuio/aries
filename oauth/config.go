@@ -12,6 +12,7 @@ import (
 type JSONConfig struct {
 	GitHub       *GitHubApp
 	Google       *GoogleApp
+	DigitalOcean *DigitalOceanApp
 	StateKey     string
 	SessionKey   string
 	SignInByPass string
@@ -21,12 +22,13 @@ type JSONConfig struct {
 // Config converts a JSON marshallable config to Config.
 func (c *JSONConfig) Config() *Config {
 	return &Config{
-		GitHub:     c.GitHub,
-		Google:     c.Google,
-		StateKey:   []byte(c.StateKey),
-		SessionKey: []byte(c.SessionKey),
-		ByPass:     c.SignInByPass,
-		KeyStore:   NewFileKeyStore(c.PublicKeys),
+		GitHub:       c.GitHub,
+		Google:       c.Google,
+		DigitalOcean: c.DigitalOcean,
+		StateKey:     []byte(c.StateKey),
+		SessionKey:   []byte(c.SessionKey),
+		ByPass:       c.SignInByPass,
+		KeyStore:     NewFileKeyStore(c.PublicKeys),
 	}
 }
 
@@ -48,8 +50,9 @@ func (c *JSONConfig) SimpleGitHubConfig() *Config {
 
 // Config is a module configuration for a GitHub Oauth handling module.
 type Config struct {
-	GitHub *GitHubApp
-	Google *GoogleApp
+	GitHub       *GitHubApp
+	Google       *GoogleApp
+	DigitalOcean *DigitalOceanApp
 
 	StateKey        []byte
 	SessionKey      []byte
