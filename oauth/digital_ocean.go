@@ -47,5 +47,5 @@ func (d *digitalOcean) callback(c *aries.C) (string, *State, error) {
 		return "", nil, err
 	}
 
-	return account.Email, state, nil
+	return account.UUID, state, nil
 }

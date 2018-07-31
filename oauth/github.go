@@ -42,14 +42,13 @@ func (g *github) callback(c *aries.C) (string, *State, error) {
 	}
 
 	var user struct {
-		Login string `json:"login"`
+		ID int `json:"id"`
 	}
 	if err := json.Unmarshal(bs, &user); err != nil {
 		return "", nil, err
 	}
-	ret := user.Login
-	if ret == "" {
+	if user.ID == 0 {
 		return "", nil, fmt.Errorf("empty login")
 	}
-	return ret, state, nil
+	return fmt.Sprintf("%d", user.ID), state, nil
 }
