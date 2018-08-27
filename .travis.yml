@@ -3,7 +3,7 @@ language: go
 go_import_path: shanhu.io/aries
 
 go:
-    - 1.9
+    - 1.11
 
 install:
     - go get ./...

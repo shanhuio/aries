@@ -58,7 +58,7 @@ func (r *Repo) Serve(c *aries.C) error {
 	path := strings.TrimSuffix(host(r.ImportRoot)+c.Req.URL.Path, "/")
 
 	if !strings.HasPrefix(path, r.ImportRoot) {
-		return errcode.NotFoundf("repo not found", path)
+		return errcode.NotFoundf("repo not found: %s", path)
 	}
 
 	d := &data{
