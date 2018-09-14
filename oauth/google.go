@@ -10,7 +10,7 @@ import (
 	"shanhu.io/misc/signer"
 )
 
-// GoogleApp stores the configuration of a Google App.
+// GoogleApp stores the configuration of a Google oauth2 application.
 type GoogleApp struct {
 	ID          string
 	Secret      string
