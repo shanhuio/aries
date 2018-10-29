@@ -59,9 +59,11 @@ func (c *C) Redirect(url string) {
 // Rel returns the current relative route. The return value changes if the
 // routing is using a router, otherwise, it will always return the full routing
 // path.
-func (c *C) Rel() string {
-	return c.route.rel(c.routePos)
-}
+func (c *C) Rel() string { return c.route.rel(c.routePos) }
+
+// Current returns the next part in the current relative route.
+// The return value changes if
+func (c *C) Current() string { return c.route.current(c.routePos) }
 
 // ReadCookie reads the cookie from the context.
 func (c *C) ReadCookie(name string) string {

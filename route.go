@@ -65,7 +65,7 @@ func (r *route) dir(i int) string {
 
 func (r *route) current(i int) string {
 	if i >= len(r.routes) {
-		panic("out of range")
+		return ""
 	}
 	part := r.parts[i]
 	return r.p[part.start:part.end]
