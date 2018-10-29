@@ -80,15 +80,15 @@ func (r *Router) notFound(c *C) error {
 // Serve serves the incoming context. It returns Miss if the path hits
 // nothing and Default() is not set.
 func (r *Router) Serve(c *C) error {
-	rel := c.route.rel(c.routePos)
+	rel := c.Rel()
 	if rel == "" {
-		if !c.route.isDir || r.index == nil {
+		if !c.PathIsDir() || r.index == nil {
 			return r.notFound(c)
 		}
 		return r.index(c)
 	}
 
-	route := c.route.relRoute(c.routePos)
+	route := c.RelRoute()
 	hitRoute, p := r.trie.Find(route)
 	if p == "" {
 		return r.notFound(c)
@@ -98,8 +98,8 @@ func (r *Router) Serve(c *C) error {
 		panic(fmt.Errorf("route function not found for %q", p))
 	}
 
-	c.routePos += len(hitRoute)
-	if n.isDir || (c.routePos == c.route.size() && !c.route.isDir) {
+	c.ShiftRoute(len(hitRoute))
+	if n.isDir || (c.Rel() == "" && !c.PathIsDir()) {
 		return n.f(c)
 	}
 	return r.notFound(c)

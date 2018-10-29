@@ -38,7 +38,7 @@ func TestRouter(t *testing.T) {
 	} {
 		got, err := httputil.GetString(c, host+test.p)
 		if err != nil {
-			t.Error(err)
+			t.Errorf("get %q, got error: %s", test.p, err)
 			continue
 		}
 

@@ -61,6 +61,25 @@ func (c *C) Redirect(url string) {
 // path.
 func (c *C) Rel() string { return c.route.rel(c.routePos) }
 
+// RelRoute returns the current relative route string array.
+func (c *C) RelRoute() []string {
+	ret := c.route.relRoute(c.routePos)
+	cp := make([]string, len(ret))
+	copy(cp, ret)
+	return cp
+}
+
+// ShiftRoute shift the routing pointer by inc.
+func (c *C) ShiftRoute(inc int) {
+	c.routePos += inc
+	if c.routePos >= c.route.size() {
+		c.routePos = c.route.size()
+	}
+}
+
+// PathIsDir return true if the path ends with a slash.
+func (c *C) PathIsDir() bool { return c.route.isDir }
+
 // Current returns the next part in the current relative route.
 // The return value changes if
 func (c *C) Current() string { return c.route.current(c.routePos) }

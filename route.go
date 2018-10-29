@@ -52,9 +52,7 @@ func newRoute(p string) *route {
 
 func (r *route) path() string { return r.p }
 
-func (r *route) size() int {
-	return len(r.routes)
-}
+func (r *route) size() int { return len(r.routes) }
 
 func (r *route) dir(i int) string {
 	if i >= len(r.parts) {
@@ -64,7 +62,7 @@ func (r *route) dir(i int) string {
 }
 
 func (r *route) current(i int) string {
-	if i >= len(r.routes) {
+	if i >= len(r.parts) {
 		return ""
 	}
 	part := r.parts[i]
