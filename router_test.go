@@ -70,19 +70,33 @@ func TestRouter(t *testing.T) {
 func TestRouterWithIndex(t *testing.T) {
 	r := NewRouter()
 	r.Index(MakeStringFunc("index"))
+
+	sub := NewRouter()
+	sub.Index(MakeStringFunc("sub-index"))
+	r.Dir("sub", sub.Serve)
+
 	s := httptest.NewServer(Serve(r))
 	defer s.Close()
 
-	got, err := httputil.GetString(s.Client(), s.URL)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	if got != "index" {
-		t.Errorf(
-			"get index page, want %q in response, got %q",
-			"index", got,
-		)
+	for _, test := range []struct {
+		p, want string
+	}{
+		{"", "index"},
+		{"/", "index"},
+		{"/sub", "sub-index"},
+		{"/sub/", "sub-index"},
+	} {
+		got, err := httputil.GetString(s.Client(), s.URL+test.p)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		if got != test.want {
+			t.Errorf(
+				"get index page, want %q in response, got %q",
+				test.want, got,
+			)
+		}
 	}
 }
 

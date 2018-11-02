@@ -82,7 +82,7 @@ func (r *Router) notFound(c *C) error {
 func (r *Router) Serve(c *C) error {
 	rel := c.Rel()
 	if rel == "" {
-		if !c.PathIsDir() || r.index == nil {
+		if r.index == nil {
 			return r.notFound(c)
 		}
 		return r.index(c)
