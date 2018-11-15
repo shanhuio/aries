@@ -4,11 +4,11 @@ package aries
 type ServiceSet struct {
 	Auth Auth
 
-	Resource Service
-	Guest    Service
-	User     Service
-	Admin    Service
-	IsAdmin  func(c *C) bool
+	Resource   Service
+	Guest      Service
+	User       Service
+	Admin      Service
+	IsInternal func(c *C) bool
 
 	InternalSignIn Func
 }
@@ -20,11 +20,11 @@ func serveService(m Service, c *C) error {
 	return m.Serve(c)
 }
 
-func (s *ServiceSet) isAdmin(c *C) bool {
-	if s.IsAdmin == nil {
+func (s *ServiceSet) isInternal(c *C) bool {
+	if s.IsInternal == nil {
 		return c.User != "" && c.UserLevel > 0
 	}
-	return s.IsAdmin(c)
+	return s.IsInternal(c)
 }
 
 // Serve serves the incoming request with the mux set.
@@ -49,7 +49,7 @@ func (s *ServiceSet) Serve(c *C) error {
 			return err
 		}
 	}
-	if s.isAdmin(c) {
+	if s.isInternal(c) {
 		if err := serveService(s.Admin, c); err != Miss {
 			return err
 		}
@@ -75,7 +75,7 @@ func (s *ServiceSet) ServeInternal(c *C) error {
 		return err
 	}
 
-	if !s.isAdmin(c) {
+	if !s.isInternal(c) {
 		if c.Path == "/" {
 			if s.InternalSignIn != nil {
 				return s.InternalSignIn(c)
