@@ -5,7 +5,7 @@ import (
 
 	"net/http/httptest"
 
-	"smallrepo.com/base/httputil"
+	"shanhu.io/base/httputil"
 )
 
 func TestStaticFiles(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http/httptest"
 
-	"smallrepo.com/base/httputil"
+	"shanhu.io/base/httputil"
 )
 
 type testAuth struct{}

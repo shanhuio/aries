@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"shanhu.io/aries/https/httpstest"
-	"smallrepo.com/base/httputil"
+	"shanhu.io/base/httputil"
 )
 
 func TestHostMux(t *testing.T) {

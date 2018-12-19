@@ -5,8 +5,8 @@ import (
 
 	"net/http/httptest"
 
+	"shanhu.io/base/httputil"
 	"shanhu.io/misc/errcode"
-	"smallrepo.com/base/httputil"
 )
 
 func TestJSONString(t *testing.T) {
