@@ -13,7 +13,10 @@ type jsonCall struct {
 	resp       reflect.Type
 }
 
-var errType = reflect.TypeOf(error(nil))
+var (
+	errType     = reflect.TypeOf((*error)(nil)).Elem()
+	contextType = reflect.TypeOf((*C)(nil))
+)
 
 func newJSONCall(f interface{}) (*jsonCall, error) {
 	t := reflect.TypeOf(f)
@@ -24,23 +27,27 @@ func newJSONCall(f interface{}) (*jsonCall, error) {
 	c := &jsonCall{f: reflect.ValueOf(f)}
 
 	numIn := t.NumIn()
-	if numIn == 0 {
+	if numIn == 0 || t.In(0) != contextType {
+		return nil, fmt.Errorf("must use *aries.C as first arg")
+	}
+
+	if numIn == 1 {
 		c.noRequest = true
-	} else if numIn == 1 {
-		c.req = t.In(0)
+	} else if numIn == 2 {
+		c.req = t.In(1)
 	} else {
 		return nil, fmt.Errorf("invalid number of input: %d", numIn)
 	}
 
-	numOut := t.NumIn()
+	numOut := t.NumOut()
 	if numOut == 1 {
 		c.noResponse = true
-		if t.Out(0) != errType {
-			return nil, fmt.Errorf("must return an error")
+		if got := t.Out(0); got != errType {
+			return nil, fmt.Errorf("must return error, got %s", got)
 		}
 	} else if numOut == 2 {
-		if t.Out(1) != errType {
-			return nil, fmt.Errorf("must return an error")
+		if got := t.Out(1); got != errType {
+			return nil, fmt.Errorf("must return an error, got %s", got)
 		}
 		c.resp = t.Out(0)
 	} else {
@@ -57,13 +64,21 @@ func (j *jsonCall) call(c *C) error {
 
 	var ret []reflect.Value
 	if !j.noRequest {
-		req := reflect.New(j.req)
-		if err := UnmarshalJSONBody(c, req.Interface()); err != nil {
-			return err
+		if j.req.Kind() != reflect.Ptr {
+			req := reflect.New(j.req)
+			if err := UnmarshalJSONBody(c, req.Interface()); err != nil {
+				return err
+			}
+			ret = j.f.Call([]reflect.Value{reflect.ValueOf(c), req.Elem()})
+		} else {
+			req := reflect.New(j.req.Elem())
+			if err := UnmarshalJSONBody(c, req.Interface()); err != nil {
+				return err
+			}
+			ret = j.f.Call([]reflect.Value{reflect.ValueOf(c), req})
 		}
-		ret = j.f.Call([]reflect.Value{req})
 	} else {
-		ret = j.f.Call(nil)
+		ret = j.f.Call([]reflect.Value{reflect.ValueOf(c)})
 	}
 
 	var resp, err reflect.Value
