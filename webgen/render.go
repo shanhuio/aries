@@ -13,14 +13,22 @@ type Page struct {
 	Title     string
 }
 
-// Render renders a page.
-func Render(w io.Writer, page *Page, body *Node) error {
+// HTMLDocString is the doc type string for HTML.
+const HTMLDocString = "<!doctype html>"
+
+// Render renders a page with the given HTML
+func Render(w io.Writer, n *Node) error {
+	return html.Render(w, n.Node)
+}
+
+// RenderBody renders a page with the given Body
+func RenderBody(w io.Writer, page *Page, body *Node) error {
 	if page == nil {
 		page = new(Page) // just use empty value for default.
 	}
 
 	if !page.NoDocType {
-		if _, err := io.WriteString(w, "<!doctype html>\n"); err != nil {
+		if _, err := io.WriteString(w, HTMLDocString+"\n"); err != nil {
 			return err
 		}
 	}
@@ -42,7 +50,7 @@ func Render(w io.Writer, page *Page, body *Node) error {
 // RenderString renders a page into a string.
 func RenderString(page *Page, body *Node) (string, error) {
 	buf := new(bytes.Buffer)
-	if err := Render(buf, page, body); err != nil {
+	if err := RenderBody(buf, page, body); err != nil {
 		return "", err
 	}
 	return buf.String(), nil
