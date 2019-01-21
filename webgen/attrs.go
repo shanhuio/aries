@@ -2,6 +2,7 @@ package webgen
 
 import (
 	"sort"
+	"strings"
 
 	"golang.org/x/net/html"
 )
@@ -23,4 +24,18 @@ func setAttrs(node *html.Node, attrs Attrs) {
 		})
 	}
 	return
+}
+
+// Class is the class attribute for a div.
+type Class []string
+
+func setClass(node *html.Node, cls Class) {
+	if len(cls) == 0 {
+		return
+	}
+
+	node.Attr = append(node.Attr, html.Attribute{
+		Key: "class",
+		Val: strings.Join([]string(cls), " "),
+	})
 }

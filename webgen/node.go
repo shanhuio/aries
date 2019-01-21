@@ -25,6 +25,8 @@ func Text(s string) *Node { return &Node{text(s)} }
 func addChildren(n *html.Node, children ...interface{}) {
 	for _, child := range children {
 		switch c := child.(type) {
+		case Class:
+			setClass(n, c)
 		case Attrs:
 			setAttrs(n, c)
 		case string:
