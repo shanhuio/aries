@@ -42,6 +42,7 @@ var (
 	Title      = bind(atom.Title)
 	Meta       = bind(atom.Meta)
 	Head       = bind(atom.Head)
+	HTML       = bind(atom.Html)
 	P          = bind(atom.P)
 	Pre        = bind(atom.Pre)
 	Blockquote = bind(atom.Blockquote)
@@ -55,6 +56,20 @@ var (
 	H6         = bind(atom.H3)
 	A          = bind(atom.A)
 )
+
+// NewHTML creates a new blank HTML element with the specified language.
+func NewHTML(lang string) *Node {
+	if lang == "" {
+		return HTML()
+	}
+	return HTML(Attrs{"lang": lang})
+}
+
+// NewHTMLEnglish creates a new English HTML element.
+func NewHTMLEnglish() *Node { return NewHTML("en") }
+
+// NewHTMLChinese creates a new Chinese HTML element.
+func NewHTMLChinese() *Node { return NewHTML("zh") }
 
 // NewMeta create a new meta tag.
 func NewMeta(key, value string) *Node {

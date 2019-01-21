@@ -5,7 +5,6 @@ import (
 	"io"
 
 	"golang.org/x/net/html"
-	"golang.org/x/net/html/atom"
 )
 
 // Page contains the configuration of a page.
@@ -26,8 +25,7 @@ func Render(w io.Writer, page *Page, body *Node) error {
 		}
 	}
 
-	doc := Element(atom.Html, Attrs{"lang": "en"})
-
+	doc := NewHTMLEnglish()
 	head := Head(NewMeta("charset", "UTF-8"))
 	if page.Title != "" {
 		head.Add(Title(page.Title))
