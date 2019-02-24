@@ -100,8 +100,9 @@ func (j *jsonCall) call(c *C) error {
 	return ReplyJSON(c, resp.Interface())
 }
 
-// JSONCall wraps a function of form `func(req *RequestType) (resp
-// *ResponseType, error)` into a JSON marshalled RPC call.
+// JSONCall wraps a function of form
+// `func(c *aries.C, req *RequestType) (resp *ResponseType, error)`
+// into a JSON marshalled RPC call.
 func JSONCall(f interface{}) Func {
 	call, err := newJSONCall(f)
 	if err != nil {

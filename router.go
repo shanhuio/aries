@@ -45,10 +45,18 @@ func (r *Router) File(p string, f Func) error {
 
 // JSONCall adds a JSON marshalled POST based RPC call node into the routing
 // tree. The function must be in the form of
-// `func(req *RequestType) (resp *ResponseType, error)`, where RequestType
+// `func(c *aries.C, req *RequestType) (resp *ResponseType, error)`,
+// where RequestType
 // and ResponseType are both JSON marshallable.
 func (r *Router) JSONCall(p string, f interface{}) error {
 	return r.File(p, JSONCall(f))
+}
+
+// JSONCallMust is the same as JSONCall, but panics if there is an error.
+func (r *Router) JSONCallMust(p string, f interface{}) {
+	if err := r.JSONCall(p, f); err != nil {
+		panic(err)
+	}
 }
 
 // Dir adds a routing directory node into the routing tree.
