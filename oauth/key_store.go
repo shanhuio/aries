@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 
 	"shanhu.io/base/httputil"
+	"shanhu.io/misc/errcode"
 )
 
 // KeyStore loads a public key for a user.
@@ -80,5 +81,12 @@ func NewWebKeyStore(base string) *WebKeyStore {
 
 // Key reads the key for the given user.
 func (s *WebKeyStore) Key(user string) ([]byte, error) {
-	return s.client.GetBytes(user + ".pub")
+	bs, err := s.client.GetBytes(user + ".pub")
+	if err != nil {
+		if errcode.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return bs, nil
 }

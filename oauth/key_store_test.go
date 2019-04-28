@@ -4,6 +4,9 @@ import (
 	"testing"
 
 	"bytes"
+	"net/http/httptest"
+
+	"shanhu.io/aries"
 )
 
 func TestMemKeyStore(t *testing.T) {
@@ -29,11 +32,8 @@ func TestMemKeyStore(t *testing.T) {
 	}
 }
 
-func TestFileKeyStore(t *testing.T) {
-	s := NewFileKeyStore(map[string]string{
-		"h8liu":  "testdata/h8liu.pub",
-		"yumuzi": "testdata/yumuzi.pub",
-	})
+func testFileKeyStore(t *testing.T, ks KeyStore) {
+	t.Helper()
 
 	for _, test := range []struct {
 		user, key string
@@ -42,7 +42,9 @@ func TestFileKeyStore(t *testing.T) {
 		{"yumuzi", "work?\n"},
 		{"xuduoduo", ""},
 	} {
-		got, err := s.Key(test.user)
+		t.Logf("test key for: %s", test.user)
+
+		got, err := ks.Key(test.user)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -50,4 +52,23 @@ func TestFileKeyStore(t *testing.T) {
 			t.Errorf("want %q, got %q", test.key, string(got))
 		}
 	}
+}
+
+func TestFileKeyStore(t *testing.T) {
+	s := NewFileKeyStore(map[string]string{
+		"h8liu":  "testdata/h8liu.pub",
+		"yumuzi": "testdata/yumuzi.pub",
+	})
+
+	testFileKeyStore(t, s)
+}
+
+func TestWebKeyStore(t *testing.T) {
+	static := aries.NewStaticFiles("testdata")
+	s := httptest.NewServer(aries.Serve(static))
+	defer s.Close()
+
+	t.Log(s.URL)
+	ks := NewWebKeyStore(s.URL)
+	testFileKeyStore(t, ks)
 }
