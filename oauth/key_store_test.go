@@ -31,8 +31,8 @@ func TestMemKeyStore(t *testing.T) {
 
 func TestFileKeyStore(t *testing.T) {
 	s := NewFileKeyStore(map[string]string{
-		"h8liu":  "testdata/h8liu.key",
-		"yumuzi": "testdata/yumuzi.key",
+		"h8liu":  "testdata/h8liu.pub",
+		"yumuzi": "testdata/yumuzi.pub",
 	})
 
 	for _, test := range []struct {
