@@ -163,6 +163,8 @@ func (mod *Module) SetupCookie(c *aries.C, user string) {
 
 func (mod *Module) signIn(c *aries.C, method, user, dest string) error {
 	if mod.c.LoginCheck == nil {
+		mod.SetupCookie(c, user)
+		c.Redirect(dest)
 		return nil
 	}
 
@@ -193,6 +195,9 @@ func (mod *Module) checkUser(c *aries.C) (
 	if mod.c.Check == nil {
 		c.User = user
 		c.UserLevel = 0
+		if user != "" {
+			c.UserLevel = 1
+		}
 		return true, needRefresh, nil
 	}
 

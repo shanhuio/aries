@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 
 	"shanhu.io/aries"
+	"shanhu.io/misc/errcode"
 )
 
 func TestMemKeyStore(t *testing.T) {
@@ -46,6 +47,9 @@ func testFileKeyStore(t *testing.T, ks KeyStore) {
 
 		got, err := ks.Key(test.user)
 		if err != nil {
+			if test.key == "" && errcode.IsNotFound(err) {
+				continue
+			}
 			t.Fatal(err)
 		}
 		if string(got) != test.key {

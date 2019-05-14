@@ -7,6 +7,10 @@ import (
 	"shanhu.io/misc/errcode"
 )
 
+func errUserNotFound(u string) error {
+	return errcode.NotFoundf("user %q not found", u)
+}
+
 // KeyStore loads a public key for a user.
 type KeyStore interface {
 	Key(user string) ([]byte, error)
@@ -33,7 +37,7 @@ func (s *MemKeyStore) Set(user string, k []byte) {
 func (s *MemKeyStore) Key(user string) ([]byte, error) {
 	bs, found := s.keys[user]
 	if !found {
-		return nil, nil
+		return nil, errUserNotFound(user)
 	}
 	ret := make([]byte, len(bs))
 	copy(ret, bs)
@@ -54,12 +58,12 @@ func NewFileKeyStore(keys map[string]string) *FileKeyStore {
 // Key reads the key for the given user.
 func (s *FileKeyStore) Key(user string) ([]byte, error) {
 	if s.keys == nil {
-		return nil, nil
+		return nil, errUserNotFound(user)
 	}
 
 	f, found := s.keys[user]
 	if !found {
-		return nil, nil
+		return nil, errUserNotFound(user)
 	}
 	return ioutil.ReadFile(f)
 }
@@ -81,12 +85,5 @@ func NewWebKeyStore(base string) *WebKeyStore {
 
 // Key reads the key for the given user.
 func (s *WebKeyStore) Key(user string) ([]byte, error) {
-	bs, err := s.client.GetBytes(user + ".pub")
-	if err != nil {
-		if errcode.IsNotFound(err) {
-			return nil, nil
-		}
-		return nil, err
-	}
-	return bs, nil
+	return s.client.GetBytes(user + ".pub")
 }
