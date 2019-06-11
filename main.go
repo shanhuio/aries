@@ -4,9 +4,11 @@ import (
 	"flag"
 	"net"
 	"net/http"
+	"os"
 	"strings"
 
 	"shanhu.io/misc/jsonutil"
+	"shanhu.io/misc/osutil"
 )
 
 // Main launches a service with the given config structure, and default
@@ -32,6 +34,16 @@ func Main(b BuildFunc, config interface{}, addr string) {
 	logger.Printf("serve on %s", addr)
 
 	if strings.HasSuffix(addr, ".sock") {
+		exist, err := osutil.IsSock(addr)
+		if err != nil {
+			logger.Exit(err)
+		}
+
+		if exist {
+			if err := os.Remove(addr); err != nil {
+				logger.Exit(err)
+			}
+		}
 		lis, err := net.ListenUnix("unix", &net.UnixAddr{
 			Name: addr,
 			Net:  "unix",
