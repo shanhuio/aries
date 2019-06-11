@@ -2,7 +2,9 @@ package aries
 
 import (
 	"flag"
+	"net"
 	"net/http"
+	"strings"
 
 	"shanhu.io/misc/jsonutil"
 )
@@ -28,5 +30,17 @@ func Main(b BuildFunc, config interface{}, addr string) {
 	}
 
 	logger.Printf("serve on %s", addr)
+
+	if strings.HasSuffix(addr, ".sock") {
+		lis, err := net.ListenUnix("unix", &net.UnixAddr{
+			Name: addr,
+			Net:  "unix",
+		})
+		if err != nil {
+			logger.Exit(err)
+		}
+		logger.Exit(http.Serve(lis, Serve(s)))
+	}
+
 	logger.Exit(http.ListenAndServe(addr, Serve(s)))
 }
