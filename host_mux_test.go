@@ -9,8 +9,8 @@ import (
 
 func TestHostMux(t *testing.T) {
 	m := NewHostMux()
-	m.Set("shanhu.io", MakeStringFunc("shanhu"))
-	m.Set("h8liu.io", MakeStringFunc("h8liu"))
+	m.Set("shanhu.io", StringFunc("shanhu"))
+	m.Set("h8liu.io", StringFunc("h8liu"))
 
 	s, err := httpstest.NewServer([]string{
 		"shanhu.io", "h8liu.io",

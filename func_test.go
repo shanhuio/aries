@@ -10,7 +10,7 @@ import (
 
 func TestFunc(t *testing.T) {
 	const msg = "hello"
-	f := MakeStringFunc(msg)
+	f := StringFunc(msg)
 	s := httptest.NewServer(Func(f))
 	defer s.Close()
 
@@ -26,7 +26,7 @@ func TestFunc(t *testing.T) {
 
 func TestFuncHTTPS(t *testing.T) {
 	const msg = "hello"
-	f := MakeStringFunc(msg)
+	f := StringFunc(msg)
 	s := httptest.NewTLSServer(Func(f))
 	defer s.Close()
 

@@ -9,11 +9,6 @@ import (
 // Func defines an HTTP handling function.
 type Func func(c *C) error
 
-func okHandler(c *C) error {
-	fmt.Fprint(c.Resp, "ok")
-	return nil
-}
-
 // Serve implements the service interface.
 func (f Func) Serve(c *C) error { return f(c) }
 
@@ -43,8 +38,8 @@ func ListenAndServe(addr string, f Func) error {
 	return f.ListenAndServe(addr)
 }
 
-// MakeStringFunc creates a Func that always reply the given string.
-func MakeStringFunc(s string) Func {
+// StringFunc creates a Func that always reply the given string.
+func StringFunc(s string) Func {
 	return func(c *C) error {
 		fmt.Fprint(c.Resp, s)
 		return nil

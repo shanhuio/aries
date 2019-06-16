@@ -18,7 +18,7 @@ func makeEchoRel(s string) Func {
 
 func TestRouter(t *testing.T) {
 	r := NewRouter()
-	r.File("something", MakeStringFunc("xxx"))
+	r.File("something", StringFunc("xxx"))
 	r.Dir("books", makeEchoRel("books"))
 
 	s := httptest.NewServer(Serve(r))
@@ -69,10 +69,10 @@ func TestRouter(t *testing.T) {
 
 func TestRouterWithIndex(t *testing.T) {
 	r := NewRouter()
-	r.Index(MakeStringFunc("index"))
+	r.Index(StringFunc("index"))
 
 	sub := NewRouter()
-	sub.Index(MakeStringFunc("sub-index"))
+	sub.Index(StringFunc("sub-index"))
 	r.Dir("sub", sub.Serve)
 
 	s := httptest.NewServer(Serve(r))
@@ -102,8 +102,8 @@ func TestRouterWithIndex(t *testing.T) {
 
 func TestRouterWithDefault(t *testing.T) {
 	r := NewRouter()
-	r.Index(MakeStringFunc("index"))
-	r.Default(MakeStringFunc("default"))
+	r.Index(StringFunc("index"))
+	r.Default(StringFunc("default"))
 	s := httptest.NewServer(Serve(r))
 	defer s.Close()
 
