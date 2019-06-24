@@ -147,3 +147,6 @@ func (c *C) replyError(code int, err error) bool {
 func (c *C) IsMobile() bool {
 	return isMobile(c.Req.UserAgent())
 }
+
+// Method returns the c.Req.Method.
+func (c *C) Method() string { return c.Req.Method }
