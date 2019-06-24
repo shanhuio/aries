@@ -13,6 +13,7 @@ type Service interface {
 func Serve(s Service) http.Handler {
 	f, ok := s.(Func)
 	if ok {
+		// if it is a function already, we do not need to do the wrapping.
 		return f
 	}
 	return Func(s.Serve)
