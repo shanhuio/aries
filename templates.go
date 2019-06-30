@@ -19,7 +19,7 @@ const DefaultTemplatePath = "_/tmpl"
 // NewTemplates creates a collection of templates in a particular folder.
 func NewTemplates(p string, logger *Logger) *Templates {
 	p = strutil.Default(p, DefaultTemplatePath)
-	return &Templates{path: p}
+	return &Templates{path: p, logger: logger}
 }
 
 func (ts *Templates) tmpl(f string) string {
