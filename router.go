@@ -9,15 +9,15 @@ import (
 // Router is a path router. Similar to mux, but routing base on
 // a filesystem-like syntax.
 type Router struct {
-	index Func
-	miss  Func
+	index Service
+	miss  Service
 
 	trie  *trie.Trie
 	nodes map[string]*routerNode
 }
 
 type routerNode struct {
-	f     Func
+	s     Service
 	isDir bool
 }
 
@@ -40,7 +40,7 @@ func (r *Router) Default(f Func) { r.miss = f }
 
 // File adds a routing file node into the routing tree.
 func (r *Router) File(p string, f Func) error {
-	return r.add(p, &routerNode{f: f})
+	return r.add(p, &routerNode{s: f})
 }
 
 // JSONCall adds a JSON marshalled POST based RPC call node into the routing
@@ -61,11 +61,16 @@ func (r *Router) JSONCallMust(p string, f interface{}) {
 
 // Dir adds a routing directory node into the routing tree.
 func (r *Router) Dir(p string, f Func) error {
-	return r.add(p, &routerNode{f: f, isDir: true})
+	return r.DirService(p, f)
+}
+
+// DirService adds a service into the router tree under a directory node.
+func (r *Router) DirService(p string, s Service) error {
+	return r.add(p, &routerNode{s: s, isDir: true})
 }
 
 func (r *Router) add(p string, n *routerNode) error {
-	if n.f == nil {
+	if n.s == nil {
 		panic("function is nil")
 	}
 
@@ -90,7 +95,7 @@ func (r *Router) notFound(c *C) error {
 	if r.miss == nil {
 		return Miss
 	}
-	return r.miss(c)
+	return r.miss.Serve(c)
 }
 
 // Serve serves the incoming context. It returns Miss if the path hits
@@ -101,7 +106,7 @@ func (r *Router) Serve(c *C) error {
 		if r.index == nil {
 			return r.notFound(c)
 		}
-		return r.index(c)
+		return r.index.Serve(c)
 	}
 
 	route := c.RelRoute()
@@ -116,7 +121,7 @@ func (r *Router) Serve(c *C) error {
 
 	c.ShiftRoute(len(hitRoute))
 	if n.isDir || (c.Rel() == "" && !c.PathIsDir()) {
-		return n.f(c)
+		return n.s.Serve(c)
 	}
 	return r.notFound(c)
 }
