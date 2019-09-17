@@ -10,10 +10,10 @@ import (
 
 type tasks struct {
 	lst []string
-	m   map[string]aries.Func
+	m   map[string]aries.Service
 }
 
-func newTasks(m map[string]aries.Func) *tasks {
+func newTasks(m map[string]aries.Service) *tasks {
 	var lst []string
 	for name := range m {
 		lst = append(lst, name)
@@ -34,11 +34,11 @@ func (t *tasks) serve(c *aries.C) error {
 		}
 		return errcode.InvalidArgf("unknown task: %q", name)
 	}
-	return f(c)
+	return f.Serve(c)
 }
 
 // Serve returns the serving function for a task list.
-func Serve(tasks map[string]aries.Func) aries.Func {
+func Serve(tasks map[string]aries.Service) aries.Func {
 	t := newTasks(tasks)
 	return t.serve
 }
