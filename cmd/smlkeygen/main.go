@@ -2,10 +2,12 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 
 	"shanhu.io/aries/creds"
+	"shanhu.io/misc/osutil"
 )
 
 func ne(err error) {
@@ -34,6 +36,13 @@ func main() {
 	if *out == "" {
 		*out, err = creds.HomeFile("key")
 		ne(err)
+	}
+
+	pemPath := *out + ".pem"
+	if yes, err := osutil.Exist(pemPath); err != nil {
+		ne(err)
+	} else if yes {
+		ne(fmt.Errorf("key file %q already exists", pemPath))
 	}
 
 	ne(ioutil.WriteFile(*out+".pem", pri, 0600))
