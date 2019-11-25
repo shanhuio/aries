@@ -8,6 +8,7 @@ import (
 
 	"shanhu.io/aries"
 	"shanhu.io/misc/errcode"
+	"shanhu.io/misc/rsautil"
 )
 
 func TestMemKeyStore(t *testing.T) {
@@ -16,7 +17,7 @@ func TestMemKeyStore(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	keys, err := parseKeys(keyBytes)
+	keys, err := rsautil.ParsePublicKeys(keyBytes)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,9 +51,9 @@ func testFileKeyStore(t *testing.T, ks KeyStore) {
 	}{
 		{"h8liu", []string{"zFet8qN1eNMvCQQqZRLy9Yxe-smJa8jmu30rOvBMeXw"}},
 		{"yumuzi", []string{
-            "Rxf8wK9cdKA6Zhn6KtVjSF3WUPLfnjbRlHuduSiOMsg",
-            "zUcyOLg7_GzRTo4MDpyTnIxh6gqgGemUq0si_NjRXc4",
-        }},
+			"Rxf8wK9cdKA6Zhn6KtVjSF3WUPLfnjbRlHuduSiOMsg",
+			"zUcyOLg7_GzRTo4MDpyTnIxh6gqgGemUq0si_NjRXc4",
+		}},
 		{"xuduoduo", nil},
 	} {
 		t.Logf("test key for: %s", test.user)

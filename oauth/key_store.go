@@ -1,10 +1,6 @@
 package oauth
 
 import (
-	"bytes"
-	"crypto/rsa"
-	"crypto/sha256"
-	"encoding/base64"
 	"io/ioutil"
 
 	"shanhu.io/base/httputil"
@@ -16,75 +12,30 @@ func errUserNotFound(u string) error {
 	return errcode.NotFoundf("user %q not found", u)
 }
 
-func parseKeys(bs []byte) ([]*PublicKey, error) {
-	lines := bytes.Split(bs, []byte{'\n'})
-	var keys []*PublicKey
-	for _, line := range lines {
-		line = bytes.TrimSpace(line)
-		if len(line) == 0 {
-			continue
-		}
-		k, err := newPublicKey(line)
-		if err != nil {
-			return nil, err
-		}
-		keys = append(keys, k)
-	}
-	return keys, nil
-}
-
-// PublicKey carries a public key.
-type PublicKey struct {
-	bytes []byte
-	key   *rsa.PublicKey
-	hash  []byte
-}
-
-func newPublicKey(bs []byte) (*PublicKey, error) {
-	k, err := rsautil.ParsePublicKey(bs)
-	if err != nil {
-		return nil, err
-	}
-
-	h := sha256.Sum256(bs)
-
-	return &PublicKey{
-		bytes: bs,
-		key:   k,
-		hash:  h[:],
-	}, nil
-}
-
-// Key returns the public key parsed from the bytes.
-func (k *PublicKey) Key() *rsa.PublicKey { return k.key }
-
-// HashStr returns the base64 encoding of the key hash.
-func (k *PublicKey) HashStr() string {
-	return base64.RawURLEncoding.EncodeToString(k.hash)
-}
-
 // KeyStore loads public keys for a user.
 type KeyStore interface {
-	Keys(user string) ([]*PublicKey, error)
+	Keys(user string) ([]*rsautil.PublicKey, error)
 }
 
 // MemKeyStore is a storage of public keys in memory.
 type MemKeyStore struct {
-	keys map[string][]*PublicKey
+	keys map[string][]*rsautil.PublicKey
 }
 
 // NewMemKeyStore creates a new empty key store.
 func NewMemKeyStore() *MemKeyStore {
-	return &MemKeyStore{keys: make(map[string][]*PublicKey)}
+	return &MemKeyStore{
+		keys: make(map[string][]*rsautil.PublicKey),
+	}
 }
 
 // Set sets the key for the given user.
-func (s *MemKeyStore) Set(user string, keys []*PublicKey) {
+func (s *MemKeyStore) Set(user string, keys []*rsautil.PublicKey) {
 	s.keys[user] = keys
 }
 
 // Keys returns the public keys for the given user.
-func (s *MemKeyStore) Keys(user string) ([]*PublicKey, error) {
+func (s *MemKeyStore) Keys(user string) ([]*rsautil.PublicKey, error) {
 	keys, found := s.keys[user]
 	if !found {
 		return nil, errUserNotFound(user)
@@ -104,7 +55,7 @@ func NewFileKeyStore(keys map[string]string) *FileKeyStore {
 }
 
 // Keys returns the public keys for the given user.
-func (s *FileKeyStore) Keys(user string) ([]*PublicKey, error) {
+func (s *FileKeyStore) Keys(user string) ([]*rsautil.PublicKey, error) {
 	if s.keys == nil {
 		return nil, errUserNotFound(user)
 	}
@@ -117,7 +68,7 @@ func (s *FileKeyStore) Keys(user string) ([]*PublicKey, error) {
 	if err != nil {
 		return nil, err
 	}
-	return parseKeys(bs)
+	return rsautil.ParsePublicKeys(bs)
 }
 
 // WebKeyStore is a storage of public keys backed by a web site.
@@ -136,10 +87,10 @@ func NewWebKeyStore(base string) *WebKeyStore {
 }
 
 // Keys returns the public keys of the given user.
-func (s *WebKeyStore) Keys(user string) ([]*PublicKey, error) {
+func (s *WebKeyStore) Keys(user string) ([]*rsautil.PublicKey, error) {
 	bs, err := s.client.GetBytes(user)
 	if err != nil {
 		return nil, err
 	}
-	return parseKeys(bs)
+	return rsautil.ParsePublicKeys(bs)
 }
