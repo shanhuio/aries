@@ -6,7 +6,6 @@ import (
 
 	"shanhu.io/aries"
 	"shanhu.io/misc/errcode"
-	"shanhu.io/misc/rsautil"
 	"shanhu.io/misc/signer"
 )
 
@@ -99,19 +98,16 @@ func (mod *Module) Auth() aries.Auth {
 				return err
 			}
 
-			keyBytes, err := mod.c.KeyStore.Key(req.User)
+			keys, err := mod.c.KeyStore.Keys(req.User)
 			if err != nil {
 				return err
 			}
+			// TODO: pick the right key.
 
-			k, err := rsautil.ParsePublicKey(keyBytes)
-			if err != nil {
-				return err
-			}
-
-			const loginCredsWindow = time.Minute * 5
-			sig := signer.NewRSATimeSigner(k, loginCredsWindow)
-			if err := sig.Check(req.SignedTime); err != nil {
+			const window = time.Minute * 5
+			if err := signer.CheckRSATimeSignature(
+				req.SignedTime, keys[0].Key(), window,
+			); err != nil {
 				return errcode.Add(errcode.Unauthorized, err)
 			}
 
