@@ -1,9 +1,9 @@
 package creds
 
 import (
-	"os/user"
-
 	"net/http"
+	"os"
+	"os/user"
 
 	"shanhu.io/aries"
 )
@@ -30,6 +30,11 @@ type EndPoint struct {
 }
 
 func currentUser() (string, error) {
+	v, ok := os.LookupEnv("SHANHU_USER")
+	if ok {
+		return v, nil
+	}
+
 	u, err := user.Current()
 	if err != nil {
 		return "", err
