@@ -3,8 +3,8 @@ package oauth
 import (
 	"io/ioutil"
 
-	"shanhu.io/base/httputil"
 	"shanhu.io/misc/errcode"
+	"shanhu.io/misc/httputil"
 	"shanhu.io/misc/rsautil"
 )
 

@@ -7,7 +7,7 @@ import (
 
 	"shanhu.io/aries"
 	"shanhu.io/aries/oauth"
-	"shanhu.io/base/httputil"
+	"shanhu.io/misc/httputil"
 	"shanhu.io/misc/signer"
 )
 

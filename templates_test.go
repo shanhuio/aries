@@ -5,7 +5,7 @@ import (
 
 	"net/http/httptest"
 
-	"shanhu.io/base/httputil"
+	"shanhu.io/misc/httputil"
 )
 
 func TestTemplates(t *testing.T) {

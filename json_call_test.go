@@ -4,8 +4,9 @@ import (
 	"testing"
 
 	"net/http/httptest"
-	"shanhu.io/base/httputil"
+
 	"shanhu.io/misc/errcode"
+	"shanhu.io/misc/httputil"
 )
 
 func TestJSONCallString(t *testing.T) {

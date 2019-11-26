@@ -5,7 +5,7 @@ import (
 
 	"shanhu.io/aries"
 	"shanhu.io/aries/ariestest"
-	"shanhu.io/base/httputil"
+	"shanhu.io/misc/httputil"
 )
 
 func TestMain(t *testing.T) {

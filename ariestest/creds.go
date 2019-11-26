@@ -2,7 +2,7 @@ package ariestest
 
 import (
 	"shanhu.io/aries/creds"
-	"shanhu.io/base/httputil"
+	"shanhu.io/misc/httputil"
 )
 
 // Login log into a server and fetch the token for the given user.
