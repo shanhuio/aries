@@ -8,7 +8,7 @@ import (
 )
 
 // JSONConfig is a JSON marshallable config that is commonly used for
-// setting up a server
+// setting up a server.
 type JSONConfig struct {
 	GitHub       *GitHubApp
 	Google       *GoogleApp
