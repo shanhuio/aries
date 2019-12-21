@@ -1,19 +1,15 @@
 sudo: false
 language: go
-go_import_path: shanhu.io/aries
+go_import_path: shanhu.io/misc
 
 go:
-    - 1.11
+    - "1.13"
 
 install:
     - go get ./...
-    - go get shanhu.io/tools/cmd/smlchk
-    - go get github.com/golang/lint/golint
+    - go get shanhu.io/sml/cmd/smake
 
 script:
     - test -z `gofmt -s -l .`
     - go test ./...
-    - go install -i ./...
-    - smlchk -path="shanhu.io/aries"
-    - golint ./...
-    - go vet ./...
+    - smake
