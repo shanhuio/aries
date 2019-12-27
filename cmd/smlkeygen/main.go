@@ -10,10 +10,46 @@ import (
 	"shanhu.io/misc/osutil"
 )
 
-func ne(err error) {
-	if err != nil {
-		log.Fatal(err)
+type config struct {
+	nbit         int
+	noPassphrase bool
+}
+
+func keygen(output string, config *config) error {
+	var passphrase []byte
+	if !config.noPassphrase {
+		pass, err := creds.ReadPassword("Key passphrase: ")
+		if err != nil {
+			return err
+		}
+		passphrase = pass
 	}
+
+	pri, pub, err := creds.GenerateKey(passphrase, config.nbit)
+	if err != nil {
+		return err
+	}
+
+	if output == "" {
+		out, err := creds.HomeFile("key")
+		if err != nil {
+			return err
+		}
+		output = out
+	}
+
+	pemPath := output + ".pem"
+	if yes, err := osutil.Exist(pemPath); err != nil {
+		return err
+	} else if yes {
+		return fmt.Errorf("key file %q already exists", pemPath)
+	}
+
+	if err := ioutil.WriteFile(pemPath, pri, 0600); err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(output+".pub", pub, 0600)
 }
 
 func main() {
@@ -22,29 +58,12 @@ func main() {
 	nbit := flag.Int("nbit", 4096, "number of RSA bits")
 	flag.Parse()
 
-	var pwd []byte
-	var err error
-
-	if !*nopass {
-		pwd, err = creds.ReadPassword("Key passphrase: ")
-		ne(err)
+	conf := &config{
+		nbit:         *nbit,
+		noPassphrase: *nopass,
 	}
 
-	pri, pub, err := creds.GenerateKey(pwd, *nbit)
-	ne(err)
-
-	if *out == "" {
-		*out, err = creds.HomeFile("key")
-		ne(err)
+	if err := keygen(*out, conf); err != nil {
+		log.Fatal(err)
 	}
-
-	pemPath := *out + ".pem"
-	if yes, err := osutil.Exist(pemPath); err != nil {
-		ne(err)
-	} else if yes {
-		ne(fmt.Errorf("key file %q already exists", pemPath))
-	}
-
-	ne(ioutil.WriteFile(*out+".pem", pri, 0600))
-	ne(ioutil.WriteFile(*out+".pub", pub, 0600))
 }
