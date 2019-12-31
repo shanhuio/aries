@@ -1,3 +1,6 @@
+// Package tasks provides a way to implement a set of simple subcommand-like
+// API for user to invoke. Although a task is a POST request, the request often
+// has no body content.
 package tasks
 
 import (
