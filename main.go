@@ -1,6 +1,7 @@
 package aries
 
 import (
+	"context"
 	"flag"
 	"net/http"
 	"strings"
@@ -22,8 +23,9 @@ func Main(b BuildFunc, config interface{}, addr string) {
 	}
 
 	s, err := b(&Env{
-		Config: config,
-		Logger: logger,
+		Context: context.Background(),
+		Config:  config,
+		Logger:  logger,
 	})
 	if err != nil {
 		logger.Exit(err)
