@@ -1,7 +1,6 @@
 package tasks
 
 import (
-	"path"
 	"sort"
 
 	"shanhu.io/aries"
@@ -26,7 +25,12 @@ func newTasks(m map[string]aries.Service) *tasks {
 }
 
 func (t *tasks) serve(c *aries.C) error {
-	name := path.Base(c.Path)
+	name := c.Rel()
+
+	if c.Req.Method != "POST" {
+		return errcode.NotFoundf("task %q must use POST", name)
+	}
+
 	f, found := t.m[name]
 	if !found {
 		if name == "help" {
@@ -39,6 +43,5 @@ func (t *tasks) serve(c *aries.C) error {
 
 // Serve returns the serving function for a task list.
 func Serve(tasks map[string]aries.Service) aries.Func {
-	t := newTasks(tasks)
-	return t.serve
+	return newTasks(tasks).serve
 }
