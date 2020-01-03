@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"io/ioutil"
+	"path/filepath"
 
 	"shanhu.io/misc/errcode"
 	"shanhu.io/misc/httputil"
@@ -71,6 +72,43 @@ func (s *FileKeyStore) Keys(user string) ([]*rsautil.PublicKey, error) {
 	return rsautil.ParsePublicKeys(bs)
 }
 
+func simpleName(user string) bool {
+	for _, r := range user {
+		if r >= 'a' && r <= 'z' {
+			continue
+		}
+		if r >= '0' && r <= '9' {
+			continue
+		}
+		return false
+	}
+	return true
+}
+
+// DirKeyStore is a storage of pulic keys with all the keys saved in a
+// directory.
+type DirKeyStore struct {
+	dir string
+}
+
+// NewDirKeyStore creates a new keystore with public keys saved in
+// files under a directory.
+func NewDirKeyStore(dir string) *DirKeyStore {
+	return &DirKeyStore{dir: dir}
+}
+
+// Keys returns the public keys of the given user.
+func (s *DirKeyStore) Keys(user string) ([]*rsautil.PublicKey, error) {
+	if !simpleName(user) {
+		return nil, errcode.InvalidArgf("unsupported user name: %q", user)
+	}
+	bs, err := ioutil.ReadFile(filepath.Join(s.dir, user))
+	if err != nil {
+		return nil, err
+	}
+	return rsautil.ParsePublicKeys(bs)
+}
+
 // WebKeyStore is a storage of public keys backed by a web site.
 type WebKeyStore struct {
 	base   string
@@ -88,6 +126,9 @@ func NewWebKeyStore(base string) *WebKeyStore {
 
 // Keys returns the public keys of the given user.
 func (s *WebKeyStore) Keys(user string) ([]*rsautil.PublicKey, error) {
+	if !simpleName(user) {
+		return nil, errcode.InvalidArgf("unsupported user name: %q", user)
+	}
 	bs, err := s.client.GetBytes(user)
 	if err != nil {
 		return nil, err
