@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"io/ioutil"
+	"net/url"
 	"path/filepath"
 
 	"shanhu.io/misc/errcode"
@@ -134,4 +135,20 @@ func (s *WebKeyStore) Keys(user string) ([]*rsautil.PublicKey, error) {
 		return nil, err
 	}
 	return rsautil.ParsePublicKeys(bs)
+}
+
+// OpenKeyStore connects to a keystore based on the given URL string.
+func OpenKeyStore(urlStr string) (KeyStore, error) {
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		return nil, err
+	}
+
+	switch u.Scheme {
+	case "http", "https":
+		return NewWebKeyStore(urlStr), nil
+	case "file", "":
+		return NewDirKeyStore(u.Path), nil
+	}
+	return nil, errcode.InvalidArgf("unsupported url scheme: %q", u.Scheme)
 }
