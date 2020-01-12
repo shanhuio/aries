@@ -3,9 +3,10 @@ package httpstest
 import (
 	"testing"
 
-	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"shanhu.io/aries"
 )
 
 func checkBody(t *testing.T, resp *http.Response, msg string) {
@@ -33,9 +34,7 @@ func TestServer(t *testing.T) {
 	const msg = "hello"
 	s, err := NewServer(
 		[]string{"test.shanhu.io"},
-		http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			fmt.Fprint(w, msg)
-		}),
+		aries.StringFunc(msg),
 	)
 	if err != nil {
 		t.Fatalf("create server: %s", err)
@@ -56,9 +55,7 @@ func TestDualServer(t *testing.T) {
 
 	s, err := NewDualServer(
 		[]string{"test.shanhu.io"},
-		http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			fmt.Fprint(w, msg)
-		}),
+		aries.StringFunc(msg),
 	)
 	if err != nil {
 		t.Fatalf("create server: %s", err)
