@@ -1,7 +1,7 @@
 package aries
 
 import (
-	"fmt"
+	"io"
 	"net"
 	"net/http"
 )
@@ -41,7 +41,7 @@ func ListenAndServe(addr string, f Func) error {
 // StringFunc creates a Func that always reply the given string.
 func StringFunc(s string) Func {
 	return func(c *C) error {
-		fmt.Fprint(c.Resp, s)
+		io.WriteString(c.Resp, s)
 		return nil
 	}
 }
