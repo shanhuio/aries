@@ -18,7 +18,6 @@ type SignUpRequest struct {
 
 // SignUp is an HTTP module that handles user signups.
 type SignUp struct {
-	redirect   string
 	google     *google
 	router     *aries.Router
 	reqHandler func(c *aries.C, req *SignUpRequest) error
@@ -26,7 +25,6 @@ type SignUp struct {
 
 // SignUpConfig is the config for creating a signup module.
 type SignUpConfig struct {
-	Redirect string
 	StateKey []byte
 	Google   *GoogleApp
 
@@ -35,13 +33,7 @@ type SignUpConfig struct {
 
 // NewSignUp creates a new sign up module.
 func NewSignUp(c *SignUpConfig) *SignUp {
-	redirect := c.Redirect
-	if redirect == "" {
-		redirect = "/"
-	}
-
 	s := &SignUp{
-		redirect:   redirect,
 		reqHandler: c.HandleRequest,
 	}
 
@@ -55,6 +47,11 @@ func NewSignUp(c *SignUpConfig) *SignUp {
 	s.router = s.makeRouter()
 
 	return s
+}
+
+// Serve serves the incoming HTTP request.
+func (s *SignUp) Serve(c *aries.C) error {
+	return s.router.Serve(c)
 }
 
 func (s *SignUp) makeRouter() *aries.Router {
