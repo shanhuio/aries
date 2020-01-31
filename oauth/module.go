@@ -135,18 +135,18 @@ func (mod *Module) Auth() aries.Auth {
 		})
 	}
 
-	if mod.github != nil {
-		r.File("github/signin", mod.signInHandler(mod.github.client))
-		r.File("github/callback", mod.callbackHandler("github", mod.github))
+	if g := mod.github; g != nil {
+		r.File("github/signin", mod.signInHandler(g.client()))
+		r.File("github/callback", mod.callbackHandler("github", g))
 	}
 
-	if mod.google != nil {
-		r.File("google/signin", mod.signInHandler(mod.google.client))
-		r.File("google/callback", mod.callbackHandler("google", mod.google))
+	if g := mod.google; g != nil {
+		r.File("google/signin", mod.signInHandler(g.client()))
+		r.File("google/callback", mod.callbackHandler("google", g))
 	}
 
 	if do := mod.digitalOcean; do != nil {
-		r.File("digitalocean/signin", mod.signInHandler(do.client))
+		r.File("digitalocean/signin", mod.signInHandler(do.client()))
 		r.File("digitalocean/callback", mod.callbackHandler(
 			"digitalocean", do,
 		))
@@ -257,14 +257,19 @@ func (mod *Module) signInHandler(client *Client) aries.Func {
 	}
 }
 
-func (mod *Module) callbackHandler(method string, x idExchange) aries.Func {
+func (mod *Module) callbackHandler(method string, x metaExchange) aries.Func {
 	return func(c *aries.C) error {
 		user, state, err := x.callback(c)
 		if err != nil {
 			log.Printf("%s callback: %s", method, err)
-			return errcode.Internalf("callback failed")
+			return errcode.Internalf("%s callback failed", method)
+		}
+		if user == nil {
+			return errcode.Internalf(
+				"%s callback: get user info failed", method,
+			)
 		}
 
-		return mod.signIn(c, method, user, state.Dest)
+		return mod.signIn(c, method, user.id, state.Dest)
 	}
 }

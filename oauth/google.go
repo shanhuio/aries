@@ -17,7 +17,7 @@ type GoogleApp struct {
 	RedirectURL string
 }
 
-type google struct{ client *Client }
+type google struct{ c *Client }
 
 func newGoogle(app *GoogleApp, s *signer.Sessions) *google {
 	c := NewClient(
@@ -31,30 +31,35 @@ func newGoogle(app *GoogleApp, s *signer.Sessions) *google {
 			RedirectURL: app.RedirectURL,
 		}, s,
 	)
-	return &google{c}
+	return &google{c: c}
 }
 
-func (g *google) callback(c *aries.C) (string, *State, error) {
-	tok, state, err := g.client.TokenState(c)
+func (g *google) client() *Client { return g.c }
+
+func (g *google) callback(c *aries.C) (*userMeta, *State, error) {
+	tok, state, err := g.c.TokenState(c)
 	if err != nil {
-		return "", nil, err
+		return nil, nil, err
 	}
 
 	const url = "https://www.googleapis.com/oauth2/v3/userinfo"
-	bs, err := g.client.Get(c.Context, tok, url)
+	bs, err := g.c.Get(c.Context, tok, url)
 	if err != nil {
-		return "", nil, err
+		return nil, nil, err
 	}
 
 	var user struct {
 		Email string `json:"email"`
 	}
 	if err := json.Unmarshal(bs, &user); err != nil {
-		return "", nil, err
+		return nil, nil, err
 	}
-	ret := user.Email
-	if ret == "" {
-		return "", nil, fmt.Errorf("empty login")
+	email := user.Email
+	if email == "" {
+		return nil, nil, fmt.Errorf("empty login")
 	}
-	return ret, state, nil
+	return &userMeta{
+		id:    email,
+		email: email,
+	}, state, nil
 }

@@ -3,6 +3,7 @@ package oauth
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"golang.org/x/oauth2"
 	gh "golang.org/x/oauth2/github"
@@ -16,7 +17,7 @@ type GitHubApp struct {
 	Secret string
 }
 
-type github struct{ client *Client }
+type github struct{ c *Client }
 
 func newGitHub(app *GitHubApp, s *signer.Sessions) *github {
 	c := NewClient(
@@ -27,28 +28,33 @@ func newGitHub(app *GitHubApp, s *signer.Sessions) *github {
 			Endpoint:     gh.Endpoint,
 		}, s,
 	)
-	return &github{client: c}
+	return &github{c: c}
 }
 
-func (g *github) callback(c *aries.C) (string, *State, error) {
-	tok, state, err := g.client.TokenState(c)
+func (g *github) client() *Client { return g.c }
+
+func (g *github) callback(c *aries.C) (*userMeta, *State, error) {
+	tok, state, err := g.c.TokenState(c)
 	if err != nil {
-		return "", nil, err
+		return nil, nil, err
 	}
 
-	bs, err := g.client.Get(c.Context, tok, "https://api.github.com/user")
+	bs, err := g.c.Get(c.Context, tok, "https://api.github.com/user")
 	if err != nil {
-		return "", nil, err
+		return nil, nil, err
 	}
 
 	var user struct {
 		ID int `json:"id"`
 	}
 	if err := json.Unmarshal(bs, &user); err != nil {
-		return "", nil, err
+		return nil, nil, err
 	}
 	if user.ID == 0 {
-		return "", nil, fmt.Errorf("empty login")
+		return nil, nil, fmt.Errorf("empty login")
 	}
-	return fmt.Sprintf("%d", user.ID), state, nil
+	meta := &userMeta{
+		id: strconv.Itoa(user.ID),
+	}
+	return meta, state, nil
 }
