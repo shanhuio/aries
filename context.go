@@ -81,7 +81,6 @@ func (c *C) ShiftRoute(inc int) {
 func (c *C) PathIsDir() bool { return c.route.isDir }
 
 // Current returns the next part in the current relative route.
-// The return value changes if
 func (c *C) Current() string { return c.route.current(c.routePos) }
 
 // ReadCookie reads the cookie from the context.
