@@ -78,9 +78,9 @@ func (s *service) Serve(c *aries.C) error { return s.r.Serve(c) }
 // Auth makes a aries.Auth that executes the oauth flow on the server side.
 func (mod *Module) Auth() aries.Auth {
 	r := aries.NewRouter()
-	if mod.c.ByPass != "" {
+	if mod.c.Bypass != "" {
 		r.File("signin-bypass", func(c *aries.C) error {
-			mod.SetupCookie(c, mod.c.ByPass)
+			mod.SetupCookie(c, mod.c.Bypass)
 			c.Redirect(mod.redirect)
 			return nil
 		})

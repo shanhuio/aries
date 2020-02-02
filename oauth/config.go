@@ -15,7 +15,7 @@ type JSONConfig struct {
 	DigitalOcean *DigitalOceanApp
 	StateKey     string
 	SessionKey   string
-	SignInByPass string
+	SignInBypass string
 	PublicKeys   map[string]string
 }
 
@@ -27,7 +27,7 @@ func (c *JSONConfig) Config() *Config {
 		DigitalOcean: c.DigitalOcean,
 		StateKey:     []byte(c.StateKey),
 		SessionKey:   []byte(c.SessionKey),
-		ByPass:       c.SignInByPass,
+		Bypass:       c.SignInBypass,
 		KeyStore:     NewFileKeyStore(c.PublicKeys),
 	}
 }
@@ -59,7 +59,7 @@ type Config struct {
 	SessionLifeTime time.Duration
 	SessionRefresh  time.Duration
 
-	ByPass   string
+	Bypass   string
 	Redirect string
 
 	KeyStore KeyStore
