@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"path"
+	"time"
 
 	"golang.org/x/oauth2"
 	goauth2 "golang.org/x/oauth2/google"
@@ -33,13 +34,15 @@ type Mailman struct {
 
 // Config contains configuration for a mailman.
 type Config struct {
-	App    *oauth.GoogleApp
-	States *signer.Sessions
-	Token  Token
+	App      *oauth.GoogleApp
+	StateKey []byte
+	Token    Token
 }
 
 // New creates a new mailman.
 func New(c *Config) *Mailman {
+	states := signer.NewSessions(c.StateKey, time.Minute*3)
+
 	const gmailSendScope = "https://www.googleapis.com/auth/gmail.send"
 
 	oc := &oauth2.Config{
@@ -52,7 +55,7 @@ func New(c *Config) *Mailman {
 
 	return &Mailman{
 		config: oc,
-		client: oauth.NewClient(oc, c.States),
+		client: oauth.NewClient(oc, states),
 		token:  c.Token,
 	}
 }
