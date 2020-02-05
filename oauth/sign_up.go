@@ -19,6 +19,7 @@ type SignUpRequest struct {
 // SignUp is an HTTP module that handles user signups.
 type SignUp struct {
 	google     *google
+	github     *github
 	router     *aries.Router
 	reqHandler func(c *aries.C, req *SignUpRequest) error
 }
@@ -27,6 +28,7 @@ type SignUp struct {
 type SignUpConfig struct {
 	StateKey []byte
 	Google   *GoogleApp
+	GitHub   *GitHubApp
 
 	HandleRequest func(c *aries.C, req *SignUpRequest) error
 }
@@ -42,6 +44,9 @@ func NewSignUp(c *SignUpConfig) *SignUp {
 
 	if c.Google != nil {
 		s.google = newGoogle(c.Google, states)
+	}
+	if c.GitHub != nil {
+		s.github = newGitHubWithEmail(c.GitHub, states)
 	}
 
 	s.router = s.makeRouter()
@@ -60,6 +65,11 @@ func (s *SignUp) makeRouter() *aries.Router {
 	if g := s.google; g != nil {
 		r.File("google", s.handler(g.client()))
 		r.File("google:callback", s.callback("google", g))
+	}
+
+	if g := s.github; g != nil {
+		r.File("github", s.handler(g.client()))
+		r.File("github:callback", s.callback("github", g))
 	}
 
 	return r

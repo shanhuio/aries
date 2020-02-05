@@ -17,18 +17,42 @@ type GitHubApp struct {
 	Secret string
 }
 
-type github struct{ c *Client }
+type github struct {
+	c          *Client
+	queryEmail bool
+}
 
-func newGitHub(app *GitHubApp, s *signer.Sessions) *github {
+const githubEmailScope = "user:email"
+
+func newGitHubWithScopes(
+	app *GitHubApp, s *signer.Sessions, scopes []string,
+) *github {
+	if scopes == nil {
+		scopes = []string{}
+	}
+	queryEmail := false
+	for _, scope := range scopes {
+		if scope == githubEmailScope {
+			queryEmail = true
+		}
+	}
 	c := NewClient(
 		&oauth2.Config{
 			ClientID:     app.ID,
 			ClientSecret: app.Secret,
-			Scopes:       []string{}, // only need public information
+			Scopes:       scopes, // only need public information
 			Endpoint:     gh.Endpoint,
 		}, s,
 	)
-	return &github{c: c}
+	return &github{c: c, queryEmail: queryEmail}
+}
+
+func newGitHubWithEmail(app *GitHubApp, s *signer.Sessions) *github {
+	return newGitHubWithScopes(app, s, []string{githubEmailScope})
+}
+
+func newGitHub(app *GitHubApp, s *signer.Sessions) *github {
+	return newGitHubWithScopes(app, s, nil)
 }
 
 func (g *github) client() *Client { return g.c }
@@ -53,8 +77,34 @@ func (g *github) callback(c *aries.C) (*userMeta, *State, error) {
 	if user.ID == 0 {
 		return nil, nil, fmt.Errorf("empty login")
 	}
+
+	var email string
+	if g.queryEmail {
+		const url = "https://api.github.com/user/emails"
+		bs, err := g.c.Get(c.Context, tok, url)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		type userEmail struct {
+			Email    string `json:"email"`
+			Verified bool   `json:"verified"`
+			Primary  bool   `json:"primary"`
+		}
+
+		var emails []*userEmail
+		if err := json.Unmarshal(bs, &emails); err != nil {
+			return nil, nil, err
+		}
+		for _, m := range emails {
+			if m.Primary && m.Verified {
+				email = m.Email
+			}
+		}
+	}
 	meta := &userMeta{
-		id: strconv.Itoa(user.ID),
+		id:    strconv.Itoa(user.ID),
+		email: email,
 	}
 	return meta, state, nil
 }
