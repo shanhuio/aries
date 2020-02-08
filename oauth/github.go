@@ -13,8 +13,9 @@ import (
 
 // GitHubApp is the configuration of a GitHub Oauth App.
 type GitHubApp struct {
-	ID     string
-	Secret string
+	ID          string
+	Secret      string
+	RedirectURL string
 }
 
 type github struct {
@@ -42,6 +43,7 @@ func newGitHubWithScopes(
 			ClientSecret: app.Secret,
 			Scopes:       scopes, // only need public information
 			Endpoint:     gh.Endpoint,
+			RedirectURL:  app.RedirectURL,
 		}, s,
 	)
 	return &github{c: c, queryEmail: queryEmail}
