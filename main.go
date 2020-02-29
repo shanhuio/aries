@@ -18,8 +18,10 @@ func Main(b BuildFunc, config interface{}, addr string) {
 	flag.Parse()
 
 	logger := StdLogger()
-	if err := jsonutil.ReadFile(*conf, config); err != nil {
-		logger.Exit(err)
+	if config != nil {
+		if err := jsonutil.ReadFile(*conf, config); err != nil {
+			logger.Exit(err)
+		}
 	}
 
 	s, err := b(&Env{
