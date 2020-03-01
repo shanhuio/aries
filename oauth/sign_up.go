@@ -13,6 +13,7 @@ import (
 type SignUpRequest struct {
 	Method string
 	ID     string
+	Name   string // Screen name.
 	Email  string
 }
 
@@ -99,6 +100,7 @@ func (s *SignUp) callback(method string, x metaExchange) aries.Func {
 		req := &SignUpRequest{
 			Method: method,
 			ID:     user.id,
+			Name:   user.name,
 			Email:  user.email,
 		}
 		return s.reqHandler(c, req)

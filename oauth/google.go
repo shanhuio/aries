@@ -60,6 +60,7 @@ func (g *google) callback(c *aries.C) (*userMeta, *State, error) {
 	}
 	return &userMeta{
 		id:    email,
+		name:  email,
 		email: email,
 	}, state, nil
 }

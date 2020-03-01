@@ -6,6 +6,7 @@ import (
 
 type userMeta struct {
 	id    string
+	name  string
 	email string
 }
 

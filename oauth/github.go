@@ -71,7 +71,8 @@ func (g *github) callback(c *aries.C) (*userMeta, *State, error) {
 	}
 
 	var user struct {
-		ID int `json:"id"`
+		Login string `json:"login"`
+		ID    int    `json:"id"`
 	}
 	if err := json.Unmarshal(bs, &user); err != nil {
 		return nil, nil, err
@@ -106,6 +107,7 @@ func (g *github) callback(c *aries.C) (*userMeta, *State, error) {
 	}
 	meta := &userMeta{
 		id:    strconv.Itoa(user.ID),
+		name:  user.Login,
 		email: email,
 	}
 	return meta, state, nil
