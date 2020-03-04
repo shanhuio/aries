@@ -14,12 +14,15 @@ import (
 // address.
 func Main(b BuildFunc, config interface{}, addr string) {
 	flag.StringVar(&addr, "addr", addr, "address to listen on")
-	conf := flag.String("config", "config.json", "config file")
+	var conf string
+	if config != nil {
+		flag.StringVar(&conf, "config", "config.json", "config file")
+	}
 	flag.Parse()
 
 	logger := StdLogger()
 	if config != nil {
-		if err := jsonutil.ReadFile(*conf, config); err != nil {
+		if err := jsonutil.ReadFile(conf, config); err != nil {
 			logger.Exit(err)
 		}
 	}
