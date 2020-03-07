@@ -14,9 +14,6 @@ type Env struct {
 	// Config to make the server.
 	Config interface{}
 
-	// For the server to log stuff.
-	Logger *Logger
-
 	// For the server to send outgoing HTTP requests.
 	Transport http.RoundTripper
 

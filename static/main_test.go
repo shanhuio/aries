@@ -10,8 +10,7 @@ import (
 
 func TestMain(t *testing.T) {
 	config := &config{Dir: "testdata"}
-	logger := ariestest.NewLogger(t)
-	service, err := main(&aries.Env{Config: config, Logger: logger})
+	service, err := main(&aries.Env{Config: config})
 	if err != nil {
 		t.Fatal(err)
 	}
