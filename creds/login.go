@@ -63,7 +63,6 @@ func NewServerLogin(s string) (*Login, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return NewLogin(p), nil
 }
 
