@@ -5,6 +5,7 @@ import (
 
 	"io/ioutil"
 	"net/http/httptest"
+	"net/url"
 
 	"shanhu.io/aries"
 	"shanhu.io/misc/errcode"
@@ -93,9 +94,10 @@ func TestWebKeyStore(t *testing.T) {
 	defer s.Close()
 
 	t.Log(s.URL)
-	ks, err := NewWebKeyStore(s.URL)
+	u, err := url.Parse(s.URL)
 	if err != nil {
 		t.Fatal(err)
 	}
+	ks := NewWebKeyStore(u)
 	testFileKeyStore(t, ks)
 }

@@ -117,12 +117,9 @@ type WebKeyStore struct {
 
 // NewWebKeyStore creates a new key store backed by a web site
 // at the given base URL.
-func NewWebKeyStore(base string) (*WebKeyStore, error) {
-	client, err := httputil.NewClient(base)
-	if err != nil {
-		return nil, err
-	}
-	return &WebKeyStore{client: client}, nil
+func NewWebKeyStore(base *url.URL) *WebKeyStore {
+	client := &httputil.Client{Server: base}
+	return &WebKeyStore{client: client}
 }
 
 // Keys returns the public keys of the given user.
@@ -146,11 +143,11 @@ func OpenKeyStore(urlStr string) (KeyStore, error) {
 
 	switch u.Scheme {
 	case "http", "https":
-		ks, err := NewWebKeyStore(urlStr)
+		u, err := url.Parse(urlStr)
 		if err != nil {
 			return nil, err
 		}
-		return ks, nil
+		return NewWebKeyStore(u), nil
 	case "file", "":
 		return NewDirKeyStore(u.Path), nil
 	}
