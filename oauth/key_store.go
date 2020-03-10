@@ -112,17 +112,17 @@ func (s *DirKeyStore) Keys(user string) ([]*rsautil.PublicKey, error) {
 
 // WebKeyStore is a storage of public keys backed by a web site.
 type WebKeyStore struct {
-	base   string
 	client *httputil.Client
 }
 
 // NewWebKeyStore creates a new key store backed by a web site
 // at the given base URL.
-func NewWebKeyStore(base string) *WebKeyStore {
-	return &WebKeyStore{
-		base:   base,
-		client: httputil.NewClient(base),
+func NewWebKeyStore(base string) (*WebKeyStore, error) {
+	client, err := httputil.NewClient(base)
+	if err != nil {
+		return nil, err
 	}
+	return &WebKeyStore{client: client}, nil
 }
 
 // Keys returns the public keys of the given user.
@@ -146,7 +146,11 @@ func OpenKeyStore(urlStr string) (KeyStore, error) {
 
 	switch u.Scheme {
 	case "http", "https":
-		return NewWebKeyStore(urlStr), nil
+		ks, err := NewWebKeyStore(urlStr)
+		if err != nil {
+			return nil, err
+		}
+		return ks, nil
 	case "file", "":
 		return NewDirKeyStore(u.Path), nil
 	}

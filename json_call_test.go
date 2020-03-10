@@ -23,7 +23,7 @@ func TestJSONCallString(t *testing.T) {
 	s := httptest.NewServer(JSONCall(f))
 	defer s.Close()
 
-	c := httputil.NewClient(s.URL)
+	c := httputil.NewClientMust(s.URL)
 	var str string
 	if err := c.JSONCall("/", msg, &str); err != nil {
 		t.Fatal(err)
@@ -41,7 +41,7 @@ func TestJSONFetchString(t *testing.T) {
 	s := httptest.NewServer(JSONCall(f))
 	defer s.Close()
 
-	c := httputil.NewClient(s.URL)
+	c := httputil.NewClientMust(s.URL)
 	var str string
 	if err := c.JSONCall("/", nil, &str); err != nil {
 		t.Fatal(err)
@@ -64,7 +64,7 @@ func TestJSONSendString(t *testing.T) {
 	s := httptest.NewServer(JSONCall(f))
 	defer s.Close()
 
-	c := httputil.NewClient(s.URL)
+	c := httputil.NewClientMust(s.URL)
 	if err := c.JSONCall("/", msg, nil); err != nil {
 		t.Fatal(err)
 	}
@@ -87,7 +87,7 @@ func TestJSONCallStruct(t *testing.T) {
 	s := httptest.NewServer(JSONCall(f))
 	defer s.Close()
 
-	c := httputil.NewClient(s.URL)
+	c := httputil.NewClientMust(s.URL)
 	d := new(data)
 	if err := c.JSONCall("/", &data{Message: msg}, d); err != nil {
 		t.Fatal(err)

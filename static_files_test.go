@@ -14,7 +14,7 @@ func TestStaticFiles(t *testing.T) {
 	s := httptest.NewServer(Serve(static))
 	defer s.Close()
 
-	c := httputil.NewClient(s.URL)
+	c := httputil.NewClientMust(s.URL)
 	for _, test := range []struct {
 		p, want string
 	}{

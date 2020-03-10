@@ -9,7 +9,7 @@ import (
 func Login(c *httputil.Client, user, key string) error {
 	endPoint := &creds.EndPoint{
 		User:        user,
-		Server:      c.Server,
+		Server:      c.Server.String(),
 		PemFile:     key,
 		Transport:   c.Transport,
 		Homeless:    true,

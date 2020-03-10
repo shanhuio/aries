@@ -27,7 +27,7 @@ func TestJSONString(t *testing.T) {
 	s := httptest.NewServer(Func(f))
 	defer s.Close()
 
-	c := httputil.NewClient(s.URL)
+	c := httputil.NewClientMust(s.URL)
 	var str string
 	if err := c.JSONCall("/", msg, &str); err != nil {
 		t.Fatal(err)
@@ -59,7 +59,7 @@ func TestJSONStruct(t *testing.T) {
 	s := httptest.NewServer(Func(f))
 	defer s.Close()
 
-	c := httputil.NewClient(s.URL)
+	c := httputil.NewClientMust(s.URL)
 	d := new(data)
 	if err := c.JSONCall("/", &data{Message: msg}, d); err != nil {
 		t.Fatal(err)

@@ -32,7 +32,10 @@ func LoginWithKey(p *EndPoint) (*Creds, error) {
 	}
 	cs := &Creds{Server: p.Server}
 
-	c := httputil.NewClient(p.Server)
+	c, err := httputil.NewClient(p.Server)
+	if err != nil {
+		return nil, err
+	}
 	if p.Transport != nil {
 		c.Transport = p.Transport
 	}
@@ -202,7 +205,10 @@ func (lg *Login) Dial() (*httputil.Client, error) {
 		return nil, err
 	}
 
-	c := httputil.NewTokenClient(lg.endPoint.Server, tok)
+	c, err := httputil.NewTokenClient(lg.endPoint.Server, tok)
+	if err != nil {
+		return nil, err
+	}
 	c.Transport = lg.endPoint.Transport
 	return c, nil
 }
@@ -222,7 +228,7 @@ func Dial(server string) (*httputil.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return httputil.NewTokenClient(server, tok), nil
+	return httputil.NewTokenClient(server, tok)
 }
 
 // DialEndPoint creates a token client with the given endpoint.

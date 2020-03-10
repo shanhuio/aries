@@ -72,7 +72,7 @@ func TestServiceSet(t *testing.T) {
 	}
 
 	runTest := func(url string, test *testCase) {
-		c := httputil.NewTokenClient(url, test.token)
+		c := httputil.NewTokenClientMust(url, test.token)
 		if test.wantCode != 200 {
 			got, err := c.GetCode(test.p)
 			if err != nil {

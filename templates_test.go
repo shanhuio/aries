@@ -24,7 +24,7 @@ func TestTemplates(t *testing.T) {
 	s := httptest.NewServer(Func(f))
 	defer s.Close()
 
-	c := httputil.NewClient(s.URL)
+	c := httputil.NewClientMust(s.URL)
 	for _, test := range []struct {
 		url, want string
 	}{
@@ -63,7 +63,7 @@ func TestTemplatesJSON(t *testing.T) {
 	s := httptest.NewServer(Func(f))
 	defer s.Close()
 
-	c := httputil.NewClient(s.URL)
+	c := httputil.NewClientMust(s.URL)
 	test := struct {
 		url, want string
 	}{

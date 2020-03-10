@@ -21,7 +21,7 @@ func TestMain(t *testing.T) {
 	}
 	defer s.Close()
 
-	c := httputil.NewClient("https://shanhu.io")
+	c := httputil.NewClientMust("https://shanhu.io")
 	c.Transport = s.Transport
 
 	str, err := c.GetString("/")

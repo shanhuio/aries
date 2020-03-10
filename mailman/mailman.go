@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"net/url"
 	"path"
 	"time"
 
@@ -104,8 +105,11 @@ func (m *Mailman) Send(ctx context.Context, body []byte) (string, error) {
 		ID string `json:"id"`
 	}
 
-	const url = "https://www.googleapis.com/"
-	client := httputil.NewTokenClient(url, curTok.AccessToken)
+	u := &url.URL{
+		Scheme: "https",
+		Host:   "www.googleapis.com",
+	}
+	client := &httputil.Client{Server: u, Token: curTok.AccessToken}
 
 	const route = "/gmail/v1/users/me/messages/send?alt=json"
 	if err := client.JSONCall(route, &msg, &resp); err != nil {

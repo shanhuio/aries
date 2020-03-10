@@ -93,6 +93,9 @@ func TestWebKeyStore(t *testing.T) {
 	defer s.Close()
 
 	t.Log(s.URL)
-	ks := NewWebKeyStore(s.URL)
+	ks, err := NewWebKeyStore(s.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
 	testFileKeyStore(t, ks)
 }
