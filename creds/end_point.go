@@ -53,13 +53,16 @@ func NewEndPoint(server string) (*EndPoint, error) {
 
 // NewRobot creates a new robot endpoint.
 func NewRobot(user, server, key string, env *aries.Env) *EndPoint {
-	return &EndPoint{
-		Server:      server,
-		User:        user,
-		PemFile:     key,
-		Transport:   env.Transport,
-		Homeless:    true,
-		NoTTY:       true,
-		NoPermCheck: env.Testing,
+	ep := &EndPoint{
+		Server:   server,
+		User:     user,
+		PemFile:  key,
+		Homeless: true,
+		NoTTY:    true,
 	}
+	if env != nil {
+		ep.Transport = env.Transport
+		ep.NoPermCheck = env.Testing
+	}
+	return ep
 }
