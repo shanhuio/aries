@@ -73,3 +73,12 @@ func (c *TLSConfigs) SinkHTTPS(httpAddr, httpsAddr string) *http.Transport {
 		TLSClientConfig: c.Client,
 	}
 }
+
+// InsecureSink returns a transport that always dials to the specified address,
+// and skips certificate verification.
+func InsecureSink(sinkAddr string) *http.Transport {
+	return &http.Transport{
+		DialContext:     sink(sinkAddr),
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+}
