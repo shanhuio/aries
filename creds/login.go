@@ -1,6 +1,7 @@
 package creds
 
 import (
+	"crypto/rsa"
 	"fmt"
 	"os"
 	"time"
@@ -11,12 +12,18 @@ import (
 	"shanhu.io/misc/signer"
 )
 
+func readEndpointKey(p *EndPoint) (*rsa.PrivateKey, error) {
+	tty := !p.NoTTY
+	if p.Key != nil {
+		return ParsePrivateKey("key", p.Key, tty)
+	}
+	return readPrivateKey(p.PemFile, !p.NoPermCheck, tty)
+}
+
 // LoginWithKey uses the given PEM file to login a server, and returns the creds
 // if succeess.
 func LoginWithKey(p *EndPoint) (*Creds, error) {
-	tty := !p.NoTTY
-
-	k, err := readPrivateKey(p.PemFile, !p.NoPermCheck, tty)
+	k, err := readEndpointKey(p)
 	if err != nil {
 		return nil, err
 	}

@@ -16,6 +16,10 @@ type EndPoint struct {
 	// Optional user name. If blank will fill with OS user name.
 	User string
 
+	// Optional private key content. If nil, will use fall to use
+	// PemFile. When presented, PemFile is ignored.
+	Key []byte
+
 	// Optional private key. If blank, will use the default key.
 	PemFile string
 

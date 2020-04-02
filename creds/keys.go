@@ -107,6 +107,5 @@ func ReadPrivateKey(pemFile string, tty bool) (*rsa.PrivateKey, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return ParsePrivateKey(pemFile, bs, tty)
 }
