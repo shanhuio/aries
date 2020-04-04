@@ -50,3 +50,11 @@ func Main(b BuildFunc, config interface{}, addr string) {
 		log.Fatal(err)
 	}
 }
+
+// SimpleMain launches a service with no config and default address.
+func SimpleMain(service Service, addr string) {
+	f := func(_ *Env) (Service, error) {
+		return service, nil
+	}
+	Main(f, nil, addr)
+}
