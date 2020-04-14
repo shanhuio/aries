@@ -15,7 +15,7 @@ type Env struct {
 	Config interface{}
 
 	// For the server to send outgoing HTTP requests.
-	Transport *http.Transport
+	Transport http.RoundTripper
 
 	// If this is testing environment.
 	Testing bool

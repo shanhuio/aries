@@ -24,7 +24,7 @@ type EndPoint struct {
 	PemFile string
 
 	// Optional transport for creating the client.
-	Transport *http.Transport
+	Transport http.RoundTripper
 
 	Homeless bool // If true, will not look into the home folder for caches.
 	NoTTY    bool // If true, will not fail if the key is encrypted.
