@@ -27,8 +27,10 @@ func newTestServer() *testServer {
 func serveFakeBitBucket(c *aries.C) error {
 	if strings.Index(c.Path, "repod") >= 0 {
 		fmt.Fprintln(c.Resp, `{"scm":"git"}`)
+		return nil
 	} else if strings.Index(c.Path, "repo-hg") >= 0 {
 		fmt.Fprintln(c.Resp, `{"scm":"hg"}`)
+		return nil
 	}
 	return aries.Miss
 }
