@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"shanhu.io/misc/jsonutil"
+	"shanhu.io/misc/jsonx"
 	"shanhu.io/misc/unixhttp"
 )
 
@@ -15,7 +15,7 @@ func runMain(
 	b BuildFunc, configFile string, config interface{}, addr string,
 ) error {
 	if config != nil {
-		if err := jsonutil.ReadFile(configFile, config); err != nil {
+		if err := jsonx.ReadFileMaybeJSON(configFile, config); err != nil {
 			return err
 		}
 	}
@@ -53,8 +53,6 @@ func Main(b BuildFunc, config interface{}, addr string) {
 
 // SimpleMain launches a service with no config and default address.
 func SimpleMain(service Service, addr string) {
-	f := func(_ *Env) (Service, error) {
-		return service, nil
-	}
+	f := func(_ *Env) (Service, error) { return service, nil }
 	Main(f, nil, addr)
 }
