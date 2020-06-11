@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"shanhu.io/misc/jsonutil"
 	"shanhu.io/misc/jsonx"
 	"shanhu.io/misc/unixhttp"
 )
@@ -15,8 +16,14 @@ func runMain(
 	b BuildFunc, configFile string, config interface{}, addr string,
 ) error {
 	if config != nil {
-		if err := jsonx.ReadFileMaybeJSON(configFile, config); err != nil {
-			return err
+		if strings.HasSuffix(configFile, ".json") {
+			if err := jsonutil.ReadFile(configFile, config); err != nil {
+				return err
+			}
+		} else {
+			if err := jsonx.ReadFile(configFile, config); err != nil {
+				return err
+			}
 		}
 	}
 
