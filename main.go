@@ -33,7 +33,6 @@ func loadConfig(file string, config interface{}) error {
 	if file == "" {
 		return errcode.InvalidArgf("config file not specified")
 	}
-	log.Println("config filename: ", file)
 
 	if strings.HasSuffix(file, ".json") {
 		return jsonutil.ReadFile(file, config)
