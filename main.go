@@ -7,23 +7,47 @@ import (
 	"net/http"
 	"strings"
 
+	"shanhu.io/misc/errcode"
 	"shanhu.io/misc/jsonutil"
 	"shanhu.io/misc/jsonx"
+	"shanhu.io/misc/osutil"
 	"shanhu.io/misc/unixhttp"
 )
+
+func loadConfig(file string, config interface{}) error {
+	if file == "" {
+		for _, try := range []string{
+			"config.jsonx",
+			"config.json",
+		} {
+			ok, err := osutil.IsRegular(try)
+			if err != nil {
+				return err
+			}
+			if ok {
+				file = try
+				break
+			}
+		}
+	}
+	if file == "" {
+		return errcode.InvalidArgf("config file not specified")
+	}
+
+	if strings.HasSuffix(file, ".json") {
+		if err := jsonutil.ReadFile(file, config); err != nil {
+			return err
+		}
+	}
+	return jsonx.ReadFile(file, config)
+}
 
 func runMain(
 	b BuildFunc, configFile string, config interface{}, addr string,
 ) error {
 	if config != nil {
-		if strings.HasSuffix(configFile, ".json") {
-			if err := jsonutil.ReadFile(configFile, config); err != nil {
-				return err
-			}
-		} else {
-			if err := jsonx.ReadFile(configFile, config); err != nil {
-				return err
-			}
+		if err := loadConfig(configFile, config); err != nil {
+			return errcode.Annotate(err, "load config file")
 		}
 	}
 
@@ -49,7 +73,7 @@ func Main(b BuildFunc, config interface{}, addr string) {
 	flag.StringVar(&addr, "addr", addr, "address to listen on")
 	var configFile string
 	if config != nil {
-		flag.StringVar(&configFile, "config", "config.json", "config file")
+		flag.StringVar(&configFile, "config", "", "config file")
 	}
 	flag.Parse()
 
