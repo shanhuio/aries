@@ -39,8 +39,7 @@ func (c *JSONConfig) SimpleGitHubConfig() *Config {
 	ret := c.Config()
 	ret.LoginCheck = MapGitHub
 	ret.Check = func(name string) (interface{}, int, error) {
-		_, isAdmin := c.PublicKeys[name]
-		if isAdmin {
+		if _, isAdmin := c.PublicKeys[name]; isAdmin {
 			return nil, 1, nil
 		}
 		return nil, 0, nil
@@ -64,10 +63,10 @@ type Config struct {
 
 	KeyStore KeyStore
 
-	// Exchanges Oauth2 ID's for user ID.
+	// LoginCheck exchanges Oauth2 ID's for user ID.
 	LoginCheck func(c *aries.C, method, id string) (string, error)
 
-	// Fetches the user account structure.
+	// Check checks the user id and returns the user account structure.
 	Check func(user string) (interface{}, int, error)
 }
 
