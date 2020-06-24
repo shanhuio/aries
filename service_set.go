@@ -27,15 +27,20 @@ func (s *ServiceSet) isInternal(c *C) bool {
 	return s.IsInternal(c)
 }
 
-// Serve serves the incoming request with the mux set.
-func (s *ServiceSet) Serve(c *C) error {
-	if err := serveService(s.Auth, c); err != Miss {
+func (s *ServiceSet) serveAuth(c *C) error {
+	if s.Auth == nil {
+		return nil
+	}
+	if err := s.Auth.Serve(c); err != Miss {
 		return err
 	}
-	if s.Auth != nil {
-		if err := s.Auth.Setup(c); err != nil {
-			return err
-		}
+	return s.Auth.Setup(c)
+}
+
+// Serve serves the incoming request with the mux set.
+func (s *ServiceSet) Serve(c *C) error {
+	if err := s.serveAuth(c); err != nil {
+		return err
 	}
 
 	if err := serveService(s.Resource, c); err != Miss {

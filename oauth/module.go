@@ -75,87 +75,78 @@ func (s *service) Setup(c *aries.C) error {
 
 func (s *service) Serve(c *aries.C) error { return s.r.Serve(c) }
 
+func (m *Module) pubKeySignIn(c *aries.C, r *LoginRequest) (*Creds, error) {
+	if r.SignedTime == nil {
+		return nil, errcode.InvalidArgf("signature missing")
+	}
+
+	keys, err := m.c.KeyStore.Keys(r.User)
+	if err != nil {
+		return nil, err
+	}
+
+	var key *rsautil.PublicKey
+	for _, k := range keys {
+		if k.HashStr() == r.SignedTime.KeyID {
+			key = k
+			break
+		}
+	}
+	if key == nil {
+		return nil, errcode.Unauthorizedf("signing key not authorized")
+	}
+
+	const window = time.Minute * 5
+	if err := signer.CheckRSATimeSignature(
+		r.SignedTime, key.Key(), window,
+	); err != nil {
+		return nil, errcode.Add(errcode.Unauthorized, err)
+	}
+
+	session, expires := m.NewCreds(r.User)
+	return &Creds{
+		User:    r.User,
+		Token:   session,
+		Expires: expires.UnixNano(),
+	}, nil
+}
+
 // Auth makes a aries.Auth that executes the oauth flow on the server side.
-func (mod *Module) Auth() aries.Auth {
+func (m *Module) Auth() aries.Auth {
 	r := aries.NewRouter()
-	if mod.c.Bypass != "" {
+	if m.c.Bypass != "" {
 		r.File("signin-bypass", func(c *aries.C) error {
-			mod.SetupCookie(c, mod.c.Bypass)
-			c.Redirect(mod.redirect)
+			m.SetupCookie(c, m.c.Bypass)
+			c.Redirect(m.redirect)
 			return nil
 		})
 	}
-
 	r.File("signout", func(c *aries.C) error {
 		c.ClearCookie("session")
-		c.Redirect(mod.redirect)
+		c.Redirect(m.redirect)
 		return nil
 	})
 
-	if mod.c.KeyStore != nil {
-		r.File("pubkey/signin", func(c *aries.C) error {
-			req := new(LoginRequest)
-			if err := aries.UnmarshalJSONBody(c, req); err != nil {
-				return err
-			}
-			if req.SignedTime == nil {
-				return errcode.InvalidArgf("signature missing")
-			}
-
-			keys, err := mod.c.KeyStore.Keys(req.User)
-			if err != nil {
-				return err
-			}
-
-			var key *rsautil.PublicKey
-			for _, k := range keys {
-				if k.HashStr() == req.SignedTime.KeyID {
-					key = k
-					break
-				}
-			}
-			if key == nil {
-				return errcode.Unauthorizedf("signing key not authorized")
-			}
-
-			const window = time.Minute * 5
-			if err := signer.CheckRSATimeSignature(
-				req.SignedTime, key.Key(), window,
-			); err != nil {
-				return errcode.Add(errcode.Unauthorized, err)
-			}
-
-			session, expires := mod.NewCreds(req.User)
-			resp := &Creds{
-				User:    req.User,
-				Token:   session,
-				Expires: expires.UnixNano(),
-			}
-			return aries.ReplyJSON(c, resp)
-		})
+	if m.c.KeyStore != nil {
+		r.JSONCallMust("pubkey/signin", m.pubKeySignIn)
 	}
 
-	if g := mod.github; g != nil {
-		r.File("github/signin", mod.signInHandler(g.client()))
-		r.File("github/callback", mod.callbackHandler("github", g))
+	if g := m.github; g != nil {
+		r.File("github/signin", m.signInHandler(g.client()))
+		r.File("github/callback", m.callbackHandler("github", g))
 	}
-
-	if g := mod.google; g != nil {
-		r.File("google/signin", mod.signInHandler(g.client()))
-		r.File("google/callback", mod.callbackHandler("google", g))
+	if g := m.google; g != nil {
+		r.File("google/signin", m.signInHandler(g.client()))
+		r.File("google/callback", m.callbackHandler("google", g))
 	}
-
-	if do := mod.digitalOcean; do != nil {
-		r.File("digitalocean/signin", mod.signInHandler(do.client()))
-		r.File("digitalocean/callback", mod.callbackHandler(
+	if do := m.digitalOcean; do != nil {
+		r.File("digitalocean/signin", m.signInHandler(do.client()))
+		r.File("digitalocean/callback", m.callbackHandler(
 			"digitalocean", do,
 		))
 	}
 
-	return &service{
-		m: mod,
-		r: r,
-	}
+	return &service{m: m, r: r}
 }
 
 func readSessionToken(c *aries.C) (string, string) {
@@ -166,43 +157,43 @@ func readSessionToken(c *aries.C) (string, string) {
 }
 
 // SetupCookie sets up the cookie for a particular user.
-func (mod *Module) SetupCookie(c *aries.C, user string) {
-	session, expires := mod.sessions.New([]byte(user))
+func (m *Module) SetupCookie(c *aries.C, user string) {
+	session, expires := m.sessions.New([]byte(user))
 	c.WriteCookie("session", session, expires)
 }
 
-func (mod *Module) signIn(c *aries.C, method, user, dest string) error {
-	if mod.c.LoginCheck == nil {
-		mod.SetupCookie(c, user)
+func (m *Module) signIn(c *aries.C, method, user, dest string) error {
+	if m.c.LoginCheck == nil {
+		m.SetupCookie(c, user)
 		c.Redirect(dest)
 		return nil
 	}
 
-	id, err := mod.c.LoginCheck(c, method, user)
+	id, err := m.c.LoginCheck(c, method, user)
 	if err != nil {
 		return err
 	}
 	if id != "" {
-		mod.SetupCookie(c, id)
+		m.SetupCookie(c, id)
 		c.Redirect(dest)
 	}
 	return nil
 }
 
-func (mod *Module) checkUser(c *aries.C) (
+func (m *Module) checkUser(c *aries.C) (
 	valid, needRefresh bool, err error,
 ) {
 	c.User = ""
 
 	session, method := readSessionToken(c)
-	bs, left, ok := mod.sessions.Check(session)
+	bs, left, ok := m.sessions.Check(session)
 	if !ok {
 		return false, false, nil
 	}
-	needRefresh = left < mod.sessionRefresh && method == "cookie"
+	needRefresh = left < m.sessionRefresh && method == "cookie"
 
 	user := string(bs)
-	if mod.c.Check == nil {
+	if m.c.Check == nil {
 		c.User = user
 		c.UserLevel = 0
 		if user != "" {
@@ -211,7 +202,7 @@ func (mod *Module) checkUser(c *aries.C) (
 		return true, needRefresh, nil
 	}
 
-	u, lvl, err := mod.c.Check(user)
+	u, lvl, err := m.c.Check(user)
 	if err != nil {
 		return false, false, err
 	}
@@ -228,36 +219,36 @@ func (mod *Module) checkUser(c *aries.C) (
 }
 
 // NewCreds creates new credentials for the user.
-func (mod *Module) NewCreds(user string) (string, time.Time) {
-	return mod.sessions.New([]byte(user))
+func (m *Module) NewCreds(user string) (string, time.Time) {
+	return m.sessions.New([]byte(user))
 }
 
 // Check checks the user credentials.
-func (mod *Module) Check(c *aries.C) (bool, error) {
-	ok, needRefresh, err := mod.checkUser(c)
+func (m *Module) Check(c *aries.C) (bool, error) {
+	ok, needRefresh, err := m.checkUser(c)
 	if err != nil {
 		return false, err
 	}
 	if !ok {
 		c.ClearCookie("session")
 	} else if needRefresh {
-		mod.SetupCookie(c, c.User)
+		m.SetupCookie(c, c.User)
 	}
 	return ok, nil
 }
 
 // AuthSetup setups the user authorization context.
-func (mod *Module) AuthSetup(c *aries.C) { mod.Check(c) }
+func (m *Module) AuthSetup(c *aries.C) { m.Check(c) }
 
-func (mod *Module) signInHandler(client *Client) aries.Func {
+func (m *Module) signInHandler(client *Client) aries.Func {
 	return func(c *aries.C) error {
-		state := &State{Dest: mod.redirect}
+		state := &State{Dest: m.redirect}
 		c.Redirect(client.SignInURL(state))
 		return nil
 	}
 }
 
-func (mod *Module) callbackHandler(method string, x metaExchange) aries.Func {
+func (m *Module) callbackHandler(method string, x metaExchange) aries.Func {
 	return func(c *aries.C) error {
 		user, state, err := x.callback(c)
 		if err != nil {
@@ -270,6 +261,6 @@ func (mod *Module) callbackHandler(method string, x metaExchange) aries.Func {
 			)
 		}
 
-		return mod.signIn(c, method, user.id, state.Dest)
+		return m.signIn(c, method, user.id, state.Dest)
 	}
 }
