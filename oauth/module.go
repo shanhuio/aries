@@ -103,10 +103,10 @@ func (m *Module) pubKeySignIn(c *aries.C, r *LoginRequest) (*Creds, error) {
 		return nil, errcode.Add(errcode.Unauthorized, err)
 	}
 
-	session, expires := m.NewCreds(r.User)
+	token, expires := m.newCreds(r.User)
 	return &Creds{
 		User:    r.User,
-		Token:   session,
+		Token:   token,
 		Expires: expires.UnixNano(),
 	}, nil
 }
@@ -158,8 +158,8 @@ func readSessionToken(c *aries.C) (string, string) {
 
 // SetupCookie sets up the cookie for a particular user.
 func (m *Module) SetupCookie(c *aries.C, user string) {
-	session, expires := m.sessions.New([]byte(user))
-	c.WriteCookie("session", session, expires)
+	token, expires := m.newCreds(user)
+	c.WriteCookie("session", token, expires)
 }
 
 func (m *Module) signIn(c *aries.C, method, user, dest string) error {
@@ -218,8 +218,7 @@ func (m *Module) checkUser(c *aries.C) (
 	return true, needRefresh, nil
 }
 
-// NewCreds creates new credentials for the user.
-func (m *Module) NewCreds(user string) (string, time.Time) {
+func (m *Module) newCreds(user string) (string, time.Time) {
 	return m.sessions.New([]byte(user))
 }
 
