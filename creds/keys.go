@@ -30,7 +30,11 @@ func pemBlock(k *rsa.PrivateKey, pwd []byte) (*pem.Block, error) {
 }
 
 // GenerateKey generates a private/public key pair with the given passphrase.
+// n is the bit size of the RSA key. When n is less than 0, 4096 is used.
 func GenerateKey(passphrase []byte, n int) (pri, pub []byte, err error) {
+	if n <= 0 {
+		n = 4096
+	}
 	key, err := rsa.GenerateKey(rand.Reader, n)
 	if err != nil {
 		return nil, nil, err
