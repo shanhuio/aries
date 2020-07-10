@@ -33,11 +33,6 @@ func (f Func) ServeAt(lis net.Listener) error {
 	return s.Serve(lis)
 }
 
-// ListenAndServe launches the handler as an HTTP service.
-func ListenAndServe(addr string, f Func) error {
-	return f.ListenAndServe(addr)
-}
-
 // StringFunc creates a Func that always reply the given string.
 func StringFunc(s string) Func {
 	return func(c *C) error {

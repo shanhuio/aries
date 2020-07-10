@@ -40,6 +40,15 @@ func loadConfig(file string, config interface{}) error {
 	return jsonx.ReadFile(file, config)
 }
 
+// ListenAndServe serves on the address. If the address ends
+// with .sock, it ListenAndServe's on the unix domain socket.
+func ListenAndServe(addr string, s Service) error {
+	if strings.HasSuffix(addr, ".sock") {
+		return unixhttp.ListenAndServe(addr, Serve(s))
+	}
+	return http.ListenAndServe(addr, Serve(s))
+}
+
 func runMain(
 	b BuildFunc, configFile string, config interface{}, addr string,
 ) error {
@@ -58,11 +67,7 @@ func runMain(
 	}
 
 	log.Printf("serve on %s", addr)
-
-	if strings.HasSuffix(addr, ".sock") {
-		return unixhttp.ListenAndServe(addr, Serve(s))
-	}
-	return http.ListenAndServe(addr, Serve(s))
+	return ListenAndServe(addr, s)
 }
 
 // Main launches a service with the given config structure, and default
