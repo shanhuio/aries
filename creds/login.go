@@ -3,11 +3,11 @@ package creds
 import (
 	"crypto/rsa"
 	"fmt"
-	"os"
 	"time"
 
 	"shanhu.io/aries"
 	"shanhu.io/aries/oauth"
+	"shanhu.io/misc/errcode"
 	"shanhu.io/misc/httputil"
 	"shanhu.io/misc/signer"
 )
@@ -83,30 +83,16 @@ func NewLogin(p *EndPoint) *Login {
 	if cp.PemFile == "" {
 		cp.PemFile = "key.pem"
 	}
-
-	return &Login{
-		endPoint:   &cp,
-		credsStore: newHomeCredsStore(p.Server),
+	lg := &Login{endPoint: &cp}
+	if !p.Homeless {
+		lg.credsStore = newHomeCredsStore(p.Server)
 	}
+	return lg
 }
 
 // NewRobotLogin is a shorthand for NewLogin(NewRobot())
 func NewRobotLogin(user, server, key string, env *aries.Env) *Login {
 	return NewLogin(NewRobot(user, server, key, env))
-}
-
-func (lg *Login) readCreds() (*Creds, error) {
-	if lg.endPoint.Homeless {
-		panic("login server is homeless")
-	}
-	return lg.credsStore.read()
-}
-
-func (lg *Login) writeCreds(c *Creds) error {
-	if lg.endPoint.Homeless {
-		panic("login server is homeless")
-	}
-	return lg.credsStore.write(c)
 }
 
 func (lg *Login) check(cs *Creds) (bool, error) {
@@ -129,25 +115,24 @@ func (lg *Login) check(cs *Creds) (bool, error) {
 // Token returns the login token for the login. If a valid token is already
 // cached, it returns the cached one.
 func (lg *Login) Token() (string, error) {
-	cs := lg.creds
-	if cs == nil {
-		if lg.endPoint.Homeless {
-			// Nothing cached anywhere, just return a new one.
-			return lg.GetToken()
-		}
+	if lg.endPoint.Homeless {
+		// Nothing cached anywhere, just return a new one.
+		return lg.GetToken()
+	}
 
-		// Try read the cache on file system.
-		var err error
-		if cs, err = lg.readCreds(); err != nil {
-			if os.IsNotExist(err) {
+	cs := lg.creds
+	if cs == nil && lg.credsStore != nil {
+		newCreds, err := lg.credsStore.read()
+		if err != nil {
+			if errcode.IsNotFound(err) {
 				return lg.GetToken()
 			}
 			return "", err
 		}
-		if cs == nil {
+		if newCreds == nil {
 			panic("should have creds loaded from the file system")
 		}
-		lg.creds = cs
+		cs = newCreds
 	}
 
 	// now we loaded a cached creds
@@ -190,8 +175,8 @@ func (lg *Login) GetToken() (string, error) {
 	lg.creds = cs
 
 	// If not homeless, also cache it in home directory.
-	if !lg.endPoint.Homeless {
-		if err := lg.writeCreds(cs); err != nil {
+	if lg.credsStore != nil {
+		if err := lg.credsStore.write(cs); err != nil {
 			return "", err
 		}
 	}

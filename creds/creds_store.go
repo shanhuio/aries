@@ -1,5 +1,9 @@
 package creds
 
+import (
+	"shanhu.io/misc/errcode"
+)
+
 type credsStore interface {
 	read() (*Creds, error)
 	write(c *Creds) error
@@ -17,11 +21,11 @@ func newHomeCredsStore(server string) *homeCredsStore {
 func (s *homeCredsStore) read() (*Creds, error) {
 	creds := &Creds{}
 	if err := ReadHomeJSONFile(s.file, creds); err != nil {
-		return nil, err
+		return nil, errcode.FromOS(err)
 	}
 	return creds, nil
 }
 
 func (s *homeCredsStore) write(c *Creds) error {
-	return WriteHomeJSONFile(s.file, c)
+	return errcode.FromOS(WriteHomeJSONFile(s.file, c))
 }
