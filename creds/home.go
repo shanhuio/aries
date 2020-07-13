@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+
+	"shanhu.io/misc/jsonutil"
 )
 
 const homeDir = ".shanhu"
@@ -83,13 +85,9 @@ func WriteHomeFile(f string, bs []byte) error {
 // JSON marshallable blob.
 func WriteHomeJSONFile(f string, v interface{}) error {
 	buf := new(bytes.Buffer)
-	bs, err := json.MarshalIndent(v, "", "    ")
-	if err != nil {
+	if err := jsonutil.Fprint(buf, v); err != nil {
 		return err
 	}
-	buf.Write(bs)
-	buf.Write([]byte("\n"))
-
 	return WriteHomeFile(f, buf.Bytes())
 }
 

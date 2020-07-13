@@ -59,9 +59,9 @@ func LoginWithKey(p *EndPoint) (*Creds, error) {
 
 // Login is a helper stub to perform login actions.
 type Login struct {
-	endPoint  *EndPoint
-	credsFile string
-	creds     *Creds // cached creds
+	endPoint   *EndPoint
+	credsStore credsStore
+	creds      *Creds // cached creds
 }
 
 // NewServerLogin returns a new server login with default user and pem file.
@@ -85,8 +85,8 @@ func NewLogin(p *EndPoint) *Login {
 	}
 
 	return &Login{
-		endPoint:  &cp,
-		credsFile: Filename(p.Server) + ".json",
+		endPoint:   &cp,
+		credsStore: newHomeCredsStore(p.Server),
 	}
 }
 
@@ -99,20 +99,14 @@ func (lg *Login) readCreds() (*Creds, error) {
 	if lg.endPoint.Homeless {
 		panic("login server is homeless")
 	}
-
-	ret := &Creds{}
-	if err := ReadHomeJSONFile(lg.credsFile, ret); err != nil {
-		return nil, err
-	}
-	lg.creds = ret
-	return ret, nil
+	return lg.credsStore.read()
 }
 
-func (lg *Login) writeCreds(cs *Creds) error {
+func (lg *Login) writeCreds(c *Creds) error {
 	if lg.endPoint.Homeless {
 		panic("login server is homeless")
 	}
-	return WriteHomeJSONFile(lg.credsFile, cs)
+	return lg.credsStore.write(c)
 }
 
 func (lg *Login) check(cs *Creds) (bool, error) {

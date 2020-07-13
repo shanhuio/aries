@@ -10,10 +10,11 @@ import (
 
 // EndPoint contains the login stub configuration.
 type EndPoint struct {
-	// Server prefix URL.
+	// Server is the server's prefix URL.
 	Server string
 
-	// Optional user name. If blank will fill with OS user name.
+	// User is an optional user name. If blank will use OS user name, or the
+	// value of SHANHU_USER environment variable if exists.
 	User string
 
 	// Optional private key content. If nil, will use fall to use
