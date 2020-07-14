@@ -70,28 +70,35 @@ func NewServerLogin(s string) (*Login, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewLogin(p), nil
+	return NewLogin(p)
 }
 
 // NewLogin creates a new login stub with the given config.
-func NewLogin(p *EndPoint) *Login {
+func NewLogin(p *EndPoint) (*Login, error) {
 	if p.User == "" {
-		panic("user is empty")
+		return nil, errcode.InvalidArgf("user is empty")
 	}
 
 	cp := *p
-	if cp.PemFile == "" {
-		cp.PemFile = "key.pem"
+	if cp.PemFile == "" && !cp.Homeless {
+		pem, err := HomeFile("key.pem")
+		if err != nil {
+			return nil, errcode.Internalf("fail to get home: %v", err)
+		}
+		cp.PemFile = pem
 	}
+
 	lg := &Login{endPoint: &cp}
 	if !p.Homeless {
 		lg.credsStore = newHomeCredsStore(p.Server)
 	}
-	return lg
+	return lg, nil
 }
 
 // NewRobotLogin is a shorthand for NewLogin(NewRobot())
-func NewRobotLogin(user, server, key string, env *aries.Env) *Login {
+func NewRobotLogin(
+	user, server, key string, env *aries.Env,
+) (*Login, error) {
 	return NewLogin(NewRobot(user, server, key, env))
 }
 
@@ -150,16 +157,6 @@ func (lg *Login) Token() (string, error) {
 // Do performs the login and returns the credentials.
 // It does not read or write the credential cache file.
 func (lg *Login) Do() (*Creds, error) {
-	pemFile := lg.endPoint.PemFile
-
-	if !lg.endPoint.Homeless {
-		var err error
-		lg.endPoint.PemFile, err = HomeFile(pemFile)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	return LoginWithKey(lg.endPoint)
 }
 
@@ -218,6 +215,9 @@ func Dial(server string) (*httputil.Client, error) {
 
 // DialEndPoint creates a token client with the given endpoint.
 func DialEndPoint(p *EndPoint) (*httputil.Client, error) {
-	login := NewLogin(p)
+	login, err := NewLogin(p)
+	if err != nil {
+		return nil, err
+	}
 	return login.Dial()
 }

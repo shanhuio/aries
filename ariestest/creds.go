@@ -17,7 +17,10 @@ func Login(c *httputil.Client, user, key string) error {
 		NoPermCheck: true,
 	}
 
-	login := creds.NewLogin(endPoint)
+	login, err := creds.NewLogin(endPoint)
+	if err != nil {
+		return err
+	}
 	token, err := login.Token()
 	if err != nil {
 		return err
