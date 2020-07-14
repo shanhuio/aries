@@ -85,23 +85,20 @@ func ParsePrivateKey(k string, bs []byte, tty bool) (*rsa.PrivateKey, error) {
 	return x509.ParsePKCS1PrivateKey(der)
 }
 
+func readPrivateFile(f string, permCheck bool) ([]byte, error) {
+	if permCheck {
+		return ReadPassword(f)
+	}
+	return ioutil.ReadFile(f)
+}
+
 func readPrivateKey(pemFile string, permCheck, tty bool) (
 	*rsa.PrivateKey, error,
 ) {
-	var bs []byte
-	var err error
-	if permCheck {
-		bs, err = ReadPrivateFile(pemFile)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		bs, err = ioutil.ReadFile(pemFile)
-		if err != nil {
-			return nil, err
-		}
+	bs, err := readPrivateFile(pemFile, permCheck)
+	if err != nil {
+		return nil, err
 	}
-
 	return ParsePrivateKey(pemFile, bs, tty)
 }
 
