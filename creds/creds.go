@@ -17,8 +17,16 @@ type Creds struct {
 	oauth.Creds // user is saved in creds.
 }
 
-// NewCreds creates a new credential
-func NewCreds(
+// NewCreds creates a new user credential by dialing the server using
+// the given RSA private key.
+func NewCreds(server, user string, k *rsa.PrivateKey) (*Creds, error) {
+	return NewCredsTransport(server, user, k, nil)
+}
+
+// NewCredsTransport creates a new user credential by dialing the server using
+// the given RSA private key. It uses tr as the http transport for the token
+// exchange.
+func NewCredsTransport(
 	server, user string, k *rsa.PrivateKey, tr http.RoundTripper,
 ) (*Creds, error) {
 	signed, err := signer.RSASignTime(k)

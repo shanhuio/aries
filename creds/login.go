@@ -24,8 +24,7 @@ func LoginWithKey(p *EndPoint) (*Creds, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	return NewCreds(p.Server, p.User, k, p.Transport)
+	return NewCredsTransport(p.Server, p.User, k, p.Transport)
 }
 
 // Login is a helper stub to perform login actions.
