@@ -2,14 +2,11 @@ package creds
 
 import (
 	"crypto/rsa"
-	"fmt"
 	"time"
 
 	"shanhu.io/aries"
-	"shanhu.io/aries/oauth"
 	"shanhu.io/misc/errcode"
 	"shanhu.io/misc/httputil"
-	"shanhu.io/misc/signer"
 )
 
 func readEndpointKey(p *EndPoint) (*rsa.PrivateKey, error) {
@@ -28,33 +25,7 @@ func LoginWithKey(p *EndPoint) (*Creds, error) {
 		return nil, err
 	}
 
-	signed, err := signer.RSASignTime(k)
-	if err != nil {
-		return nil, err
-	}
-
-	req := &oauth.LoginRequest{
-		User:       p.User,
-		SignedTime: signed,
-	}
-	cs := &Creds{Server: p.Server}
-
-	c, err := httputil.NewClient(p.Server)
-	if err != nil {
-		return nil, err
-	}
-	if p.Transport != nil {
-		c.Transport = p.Transport
-	}
-	if err := c.JSONCall("/pubkey/signin", req, &cs.Creds); err != nil {
-		return nil, err
-	}
-
-	if cs.Creds.User != p.User {
-		return nil, fmt.Errorf("login as user %q, got %q", p.User, cs.User)
-	}
-
-	return cs, nil
+	return NewCreds(p.Server, p.User, k, p.Transport)
 }
 
 // Login is a helper stub to perform login actions.
