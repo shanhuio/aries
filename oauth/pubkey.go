@@ -8,6 +8,7 @@ import (
 type LoginRequest struct {
 	User       string
 	SignedTime *signer.SignedRSABlock
+	TTL        int64 // Requested time to live.
 }
 
 // Creds is the response for logging in.

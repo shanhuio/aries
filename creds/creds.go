@@ -17,43 +17,56 @@ type Creds struct {
 	oauth.Creds // user is saved in creds.
 }
 
-// NewCreds creates a new user credential by dialing the server using
-// the given RSA private key.
-func NewCreds(server, user string, k *rsa.PrivateKey) (*Creds, error) {
-	return NewCredsTransport(server, user, k, nil)
+// Request contains the configuration to create a credential.
+type Request struct {
+	Server string
+	User   string
+	Key    *rsa.PrivateKey
+	TTL    int64
+
+	// Transport is the http transport for the token exchange.
+	Transport http.RoundTripper
 }
 
-// NewCredsTransport creates a new user credential by dialing the server using
-// the given RSA private key. It uses tr as the http transport for the token
-// exchange.
-func NewCredsTransport(
-	server, user string, k *rsa.PrivateKey, tr http.RoundTripper,
-) (*Creds, error) {
-	signed, err := signer.RSASignTime(k)
+// NewCredsFromRequest creates a new user credential by dialing the server
+// using the given RSA private key.
+func NewCredsFromRequest(req *Request) (*Creds, error) {
+	signed, err := signer.RSASignTime(req.Key)
 	if err != nil {
 		return nil, err
 	}
 
-	req := &oauth.LoginRequest{
-		User:       user,
+	login := &oauth.LoginRequest{
+		User:       req.User,
 		SignedTime: signed,
+		TTL:        req.TTL,
 	}
-	cs := &Creds{Server: server}
+	cs := &Creds{Server: req.Server}
 
-	c, err := httputil.NewClient(server)
+	c, err := httputil.NewClient(req.Server)
 	if err != nil {
 		return nil, err
 	}
-	if tr != nil {
-		c.Transport = tr
-	}
-	if err := c.JSONCall("/pubkey/signin", req, &cs.Creds); err != nil {
+	c.Transport = req.Transport
+
+	if err := c.JSONCall("/pubkey/signin", login, &cs.Creds); err != nil {
 		return nil, err
 	}
 
-	if got := cs.Creds.User; got != user {
-		return nil, fmt.Errorf("login as user %q, got %q", user, got)
+	if got := cs.Creds.User; got != req.User {
+		return nil, fmt.Errorf("login as user %q, got %q", req.User, got)
 	}
 
 	return cs, nil
+}
+
+// NewCreds creates a new user credential by dialing the server using
+// the given RSA private key.
+func NewCreds(server, user string, k *rsa.PrivateKey) (*Creds, error) {
+	req := &Request{
+		Server: server,
+		User:   user,
+		Key:    k,
+	}
+	return NewCredsFromRequest(req)
 }
