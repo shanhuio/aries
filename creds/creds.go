@@ -22,7 +22,7 @@ type Request struct {
 	Server string
 	User   string
 	Key    *rsa.PrivateKey
-	TTL    int64
+	TTL    time.Duration
 
 	// Transport is the http transport for the token exchange.
 	Transport http.RoundTripper
