@@ -87,7 +87,7 @@ func ParsePrivateKey(k string, bs []byte, tty bool) (*rsa.PrivateKey, error) {
 
 func readPrivateFile(f string, permCheck bool) ([]byte, error) {
 	if permCheck {
-		return ReadPassword(f)
+		return ReadPrivateFile(f)
 	}
 	return ioutil.ReadFile(f)
 }
