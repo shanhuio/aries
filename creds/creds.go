@@ -4,6 +4,7 @@ import (
 	"crypto/rsa"
 	"fmt"
 	"net/http"
+	"time"
 
 	"shanhu.io/aries/oauth"
 	"shanhu.io/misc/httputil"
@@ -39,7 +40,7 @@ func NewCredsFromRequest(req *Request) (*Creds, error) {
 	login := &oauth.LoginRequest{
 		User:       req.User,
 		SignedTime: signed,
-		TTL:        req.TTL,
+		TTL:        req.TTL.Nanoseconds(),
 	}
 	cs := &Creds{Server: req.Server}
 
