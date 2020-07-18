@@ -8,12 +8,12 @@ import (
 type LoginRequest struct {
 	User       string
 	SignedTime *signer.SignedRSABlock
-	TTL        int64 // Requested time to live.
+	TTL        int64 // Requested time to live in nanoseconds.
 }
 
 // Creds is the response for logging in.
 type Creds struct {
 	User    string
 	Token   string
-	Expires int64 // nanosecond timestamp
+	Expires int64 // Nanosecond timestamp.
 }
