@@ -59,6 +59,11 @@ func (r *Router) JSONCallMust(p string, f interface{}) {
 	}
 }
 
+// Call is an alias of JSONCallMust
+func (r *Router) Call(p string, f interface{}) {
+	r.JSONCallMust(p, f)
+}
+
 // Dir adds a routing directory node into the routing tree.
 func (r *Router) Dir(p string, f Func) error {
 	return r.DirService(p, f)
