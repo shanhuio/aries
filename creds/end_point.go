@@ -34,7 +34,8 @@ type EndPoint struct {
 	NoPermCheck bool
 }
 
-func currentUser() (string, error) {
+// CurrentUser returns the new name of current user.
+func CurrentUser() (string, error) {
 	v, ok := os.LookupEnv("SHANHU_USER")
 	if ok {
 		return v, nil
@@ -49,7 +50,7 @@ func currentUser() (string, error) {
 
 // NewEndPoint creates a new default endpoint for the target server.
 func NewEndPoint(server string) (*EndPoint, error) {
-	user, err := currentUser()
+	user, err := CurrentUser()
 	if err != nil {
 		return nil, err
 	}
