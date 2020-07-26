@@ -4,6 +4,7 @@
 package tasks
 
 import (
+	"net/http"
 	"sort"
 
 	"shanhu.io/aries"
@@ -30,7 +31,7 @@ func newTasks(m map[string]aries.Service) *tasks {
 func (t *tasks) serve(c *aries.C) error {
 	name := c.Rel()
 
-	if c.Req.Method != "POST" {
+	if c.Req.Method != http.MethodPost {
 		return errcode.NotFoundf("task %q must use POST", name)
 	}
 

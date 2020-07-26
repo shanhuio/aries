@@ -2,6 +2,7 @@ package aries
 
 import (
 	"fmt"
+	"net/http"
 	"reflect"
 )
 
@@ -58,7 +59,7 @@ func newJSONCall(f interface{}) (*jsonCall, error) {
 }
 
 func (j *jsonCall) call(c *C) error {
-	if m := c.Req.Method; m != "POST" {
+	if m := c.Req.Method; m != http.MethodPost {
 		return fmt.Errorf("method is %q; must use POST", m)
 	}
 
