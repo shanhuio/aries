@@ -7,7 +7,7 @@ import (
 
 // Login log into a server and fetch the token for the given user.
 func Login(c *httputil.Client, user, key string) error {
-	endPoint := &creds.EndPoint{
+	endPoint := &creds.Endpoint{
 		User:        user,
 		Server:      c.Server.String(),
 		PemFile:     key,

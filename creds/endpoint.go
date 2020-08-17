@@ -8,8 +8,8 @@ import (
 	"shanhu.io/aries"
 )
 
-// EndPoint contains the login stub configuration.
-type EndPoint struct {
+// Endpoint contains the login stub configuration.
+type Endpoint struct {
 	// Server is the server's prefix URL.
 	Server string
 
@@ -48,18 +48,18 @@ func CurrentUser() (string, error) {
 	return u.Username, nil
 }
 
-// NewEndPoint creates a new default endpoint for the target server.
-func NewEndPoint(server string) (*EndPoint, error) {
+// NewEndpoint creates a new default endpoint for the target server.
+func NewEndpoint(server string) (*Endpoint, error) {
 	user, err := CurrentUser()
 	if err != nil {
 		return nil, err
 	}
-	return &EndPoint{User: user, Server: server}, nil
+	return &Endpoint{User: user, Server: server}, nil
 }
 
 // NewRobot creates a new robot endpoint.
-func NewRobot(user, server, key string, env *aries.Env) *EndPoint {
-	ep := &EndPoint{
+func NewRobot(user, server, key string, env *aries.Env) *Endpoint {
+	ep := &Endpoint{
 		Server:   server,
 		User:     user,
 		PemFile:  key,

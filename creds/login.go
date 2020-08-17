@@ -9,7 +9,7 @@ import (
 	"shanhu.io/misc/httputil"
 )
 
-func readEndpointKey(p *EndPoint) (*rsa.PrivateKey, error) {
+func readEndpointKey(p *Endpoint) (*rsa.PrivateKey, error) {
 	tty := !p.NoTTY
 	if p.Key != nil {
 		return ParsePrivateKey("key", p.Key, tty)
@@ -19,7 +19,7 @@ func readEndpointKey(p *EndPoint) (*rsa.PrivateKey, error) {
 
 // LoginWithKey uses the given PEM file to login a server, and returns the creds
 // if succeess.
-func LoginWithKey(p *EndPoint) (*Creds, error) {
+func LoginWithKey(p *Endpoint) (*Creds, error) {
 	k, err := readEndpointKey(p)
 	if err != nil {
 		return nil, err
@@ -35,14 +35,14 @@ func LoginWithKey(p *EndPoint) (*Creds, error) {
 
 // Login is a helper stub to perform login actions.
 type Login struct {
-	endPoint   *EndPoint
+	endPoint   *Endpoint
 	credsStore credsStore
 	creds      *Creds // cached creds
 }
 
 // NewServerLogin returns a new server login with default user and pem file.
 func NewServerLogin(s string) (*Login, error) {
-	p, err := NewEndPoint(s)
+	p, err := NewEndpoint(s)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func NewServerLogin(s string) (*Login, error) {
 }
 
 // NewLogin creates a new login stub with the given config.
-func NewLogin(p *EndPoint) (*Login, error) {
+func NewLogin(p *Endpoint) (*Login, error) {
 	if p.User == "" {
 		return nil, errcode.InvalidArgf("user is empty")
 	}
@@ -189,8 +189,8 @@ func Dial(server string) (*httputil.Client, error) {
 	return httputil.NewTokenClient(server, tok)
 }
 
-// DialEndPoint creates a token client with the given endpoint.
-func DialEndPoint(p *EndPoint) (*httputil.Client, error) {
+// DialEndpoint creates a token client with the given endpoint.
+func DialEndpoint(p *Endpoint) (*httputil.Client, error) {
 	login, err := NewLogin(p)
 	if err != nil {
 		return nil, err
