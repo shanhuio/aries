@@ -8,8 +8,6 @@ import (
 	goauth2 "golang.org/x/oauth2/google"
 	"shanhu.io/aries"
 	"shanhu.io/misc/signer"
-
-	"log"
 )
 
 // GoogleApp stores the configuration of a Google oauth2 application.
@@ -79,8 +77,7 @@ func (g *google) callback(c *aries.C) (*userMeta, *State, error) {
 	}
 	name := user.Name
 	if name == "" {
-		log.Println("google name is empty")
-		name = email
+		name = "no-name"
 	}
 	return &userMeta{
 		id:    email,
