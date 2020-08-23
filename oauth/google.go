@@ -8,6 +8,8 @@ import (
 	goauth2 "golang.org/x/oauth2/google"
 	"shanhu.io/aries"
 	"shanhu.io/misc/signer"
+
+	"log"
 )
 
 // GoogleApp stores the configuration of a Google oauth2 application.
@@ -19,19 +21,35 @@ type GoogleApp struct {
 
 type google struct{ c *Client }
 
-func newGoogle(app *GoogleApp, s *signer.Sessions) *google {
+func newGoogleWithScopes(
+	app *GoogleApp, s *signer.Sessions, scopes []string,
+) *google {
+	if scopes == nil {
+		scopes = []string{}
+	}
 	c := NewClient(
 		&oauth2.Config{
 			ClientID:     app.ID,
 			ClientSecret: app.Secret,
-			Scopes: []string{
-				"https://www.googleapis.com/auth/userinfo.email",
-			},
-			Endpoint:    goauth2.Endpoint,
-			RedirectURL: app.RedirectURL,
+			Scopes:       scopes,
+			Endpoint:     goauth2.Endpoint,
+			RedirectURL:  app.RedirectURL,
 		}, s,
 	)
 	return &google{c: c}
+}
+
+func newGoogle(app *GoogleApp, s *signer.Sessions) *google {
+	scopes := []string{"https://www.googleapis.com/auth/userinfo.email"}
+	return newGoogleWithScopes(app, s, scopes)
+}
+
+func newGoogleWithUserInfo(app *GoogleApp, s *signer.Sessions) *google {
+	scopes := []string{
+		"https://www.googleapis.com/auth/userinfo.email",
+		"https://www.googleapis.com/auth/userinfo.profile",
+	}
+	return newGoogleWithScopes(app, s, scopes)
 }
 
 func (g *google) client() *Client { return g.c }
@@ -50,6 +68,7 @@ func (g *google) callback(c *aries.C) (*userMeta, *State, error) {
 
 	var user struct {
 		Email string `json:"email"`
+		Name  string `json:"name"`
 	}
 	if err := json.Unmarshal(bs, &user); err != nil {
 		return nil, nil, err
@@ -58,9 +77,14 @@ func (g *google) callback(c *aries.C) (*userMeta, *State, error) {
 	if email == "" {
 		return nil, nil, fmt.Errorf("empty login")
 	}
+	name := user.Name
+	if name == "" {
+		log.Println("google name is empty")
+		name = email
+	}
 	return &userMeta{
 		id:    email,
-		name:  email,
+		name:  name,
 		email: email,
 	}, state, nil
 }

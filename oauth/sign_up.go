@@ -44,7 +44,7 @@ func NewSignUp(c *SignUpConfig) *SignUp {
 	states := signer.NewSessions(c.StateKey, ttl)
 
 	if c.Google != nil {
-		s.google = newGoogle(c.Google, states)
+		s.google = newGoogleWithUserInfo(c.Google, states)
 	}
 	if c.GitHub != nil {
 		s.github = newGitHubWithEmail(c.GitHub, states)
