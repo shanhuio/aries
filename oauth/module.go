@@ -162,10 +162,14 @@ func (m *Module) SetupCookie(c *aries.C, user string) {
 	c.WriteCookie("session", token, expires)
 }
 
-func (m *Module) signIn(c *aries.C, method, user, dest string) error {
+func (m *Module) signIn(
+	c *aries.C, method, user string, state *State,
+) error {
 	if m.c.LoginCheck == nil {
-		m.SetupCookie(c, user)
-		c.Redirect(dest)
+		if !state.NoCookie {
+			m.SetupCookie(c, user)
+		}
+		c.Redirect(state.Dest)
 		return nil
 	}
 
@@ -174,8 +178,10 @@ func (m *Module) signIn(c *aries.C, method, user, dest string) error {
 		return err
 	}
 	if id != "" {
-		m.SetupCookie(c, id)
-		c.Redirect(dest)
+		if !state.NoCookie {
+			m.SetupCookie(c, id)
+		}
+		c.Redirect(state.Dest)
 	}
 	return nil
 }
@@ -246,6 +252,9 @@ func (m *Module) signInHandler(client *Client) aries.Func {
 			redirect = m.redirect
 		}
 		state := &State{Dest: redirect}
+		if c.Req.URL.Query().Get("cookie") == "false" {
+			state.NoCookie = true
+		}
 		c.Redirect(client.SignInURL(state))
 		return nil
 	}
@@ -264,6 +273,6 @@ func (m *Module) callbackHandler(method string, x metaExchange) aries.Func {
 			)
 		}
 
-		return m.signIn(c, method, user.id, state.Dest)
+		return m.signIn(c, method, user.id, state)
 	}
 }
