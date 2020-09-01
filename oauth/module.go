@@ -241,7 +241,11 @@ func (m *Module) AuthSetup(c *aries.C) { m.Check(c) }
 
 func (m *Module) signInHandler(client *Client) aries.Func {
 	return func(c *aries.C) error {
-		state := &State{Dest: m.redirect}
+		redirect := c.Req.URL.Query().Get("redirect")
+		if redirect == "" {
+			redirect = m.redirect
+		}
+		state := &State{Dest: redirect}
 		c.Redirect(client.SignInURL(state))
 		return nil
 	}
