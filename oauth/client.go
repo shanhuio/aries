@@ -12,8 +12,14 @@ import (
 
 // State contains a JSON marshalable state for OAuth2 sign in.
 type State struct {
-	Dest     string // URL to redirect after signing in.
-	NoCookie bool   // Whether set cookie after signing in.
+	// URL to redirect to after signing in.
+	Dest string
+
+	// Sign in purpose.
+	Purpose string `json:",omitempty"`
+
+	// Whether set cookie after signing in.
+	NoCookie bool `json:",omitempty"`
 }
 
 // Client is an oauth client for oauth2 exchanges.

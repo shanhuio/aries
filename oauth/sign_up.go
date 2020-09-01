@@ -57,12 +57,12 @@ func (s *SignUp) makeRouter() *aries.Router {
 
 	if g := s.google; g != nil {
 		r.File("google", s.handler(g.client()))
-		r.File("google:callback", s.callback("google", g))
+		r.File("google:callback", s.callback(MethodGoogle, g))
 	}
 
 	if g := s.github; g != nil {
 		r.File("github", s.handler(g.client()))
-		r.File("github:callback", s.callback("github", g))
+		r.File("github:callback", s.callback(MethodGitHub, g))
 	}
 
 	return r
@@ -85,10 +85,9 @@ func (s *SignUp) callback(method string, x metaExchange) aries.Func {
 		}
 		if user == nil {
 			return errcode.Internalf(
-				"%s callback: get user email failed", method,
+				"%s callback: get user info failed", method,
 			)
 		}
-
 		return s.reqHandler(c, user)
 	}
 }

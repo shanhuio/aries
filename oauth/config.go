@@ -37,7 +37,7 @@ func (c *JSONConfig) Config() *Config {
 // in c.PublicKeys are defined as admin.
 func (c *JSONConfig) SimpleGitHubConfig() *Config {
 	ret := c.Config()
-	ret.LoginCheck = MapGitHub
+	ret.SignInCheck = MapGitHub
 	ret.Check = func(name string) (interface{}, int, error) {
 		if _, isAdmin := c.PublicKeys[name]; isAdmin {
 			return nil, 1, nil
@@ -63,8 +63,8 @@ type Config struct {
 
 	KeyStore KeyStore
 
-	// LoginCheck exchanges Oauth2 ID's for user ID.
-	LoginCheck func(c *aries.C, user *UserMeta) (string, error)
+	// SignInCheck exchanges OAuth2 ID's for user ID.
+	SignInCheck func(c *aries.C, u *UserMeta, purpose string) (string, error)
 
 	// Check checks the user id and returns the user account structure.
 	Check func(user string) (interface{}, int, error)
@@ -72,7 +72,7 @@ type Config struct {
 
 // MapGitHub is a login check function that only allows
 // github login. It maps the user ID directly from GitHub users.
-func MapGitHub(c *aries.C, u *UserMeta) (string, error) {
+func MapGitHub(c *aries.C, u *UserMeta, _ string) (string, error) {
 	if u.Method != MethodGitHub {
 		return "", errcode.InvalidArgf(
 			"login with %q not supported", u.Method,

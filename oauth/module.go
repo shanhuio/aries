@@ -162,27 +162,28 @@ func (m *Module) SetupCookie(c *aries.C, user string) {
 	c.WriteCookie("session", token, expires)
 }
 
-func (m *Module) signIn(
-	c *aries.C, user *UserMeta, state *State,
-) error {
-	if m.c.LoginCheck == nil {
-		if !state.NoCookie {
-			m.SetupCookie(c, user.ID)
-		}
-		c.Redirect(state.Dest)
-		return nil
+func (m *Module) signInCheck(
+	c *aries.C, u *UserMeta, purpose string,
+) (string, error) {
+	if m.c.SignInCheck != nil {
+		return m.c.SignInCheck(c, u, purpose)
 	}
+	return u.ID, nil // default login check allows everyone.
+}
 
-	id, err := m.c.LoginCheck(c, user)
+func (m *Module) signIn(c *aries.C, user *UserMeta, state *State) error {
+	id, err := m.signInCheck(c, user, state.Purpose)
 	if err != nil {
 		return err
 	}
-	if id != "" {
-		if !state.NoCookie {
-			m.SetupCookie(c, id)
-		}
-		c.Redirect(state.Dest)
+	if id == "" {
+		return nil
 	}
+
+	if !state.NoCookie {
+		m.SetupCookie(c, id)
+	}
+	c.Redirect(state.Dest)
 	return nil
 }
 
@@ -247,14 +248,16 @@ func (m *Module) AuthSetup(c *aries.C) { m.Check(c) }
 
 func (m *Module) signInHandler(client *Client) aries.Func {
 	return func(c *aries.C) error {
-		redirect := c.Req.URL.Query().Get("redirect")
+		q := c.Req.URL.Query()
+		redirect := q.Get("redirect")
 		if redirect == "" {
 			redirect = m.redirect
 		}
 		state := &State{Dest: redirect}
-		if c.Req.URL.Query().Get("cookie") == "false" {
+		if q.Get("cookie") == "false" {
 			state.NoCookie = true
 		}
+		state.Purpose = q.Get("purpose")
 		c.Redirect(client.SignInURL(state))
 		return nil
 	}
