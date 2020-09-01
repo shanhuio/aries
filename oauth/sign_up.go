@@ -9,20 +9,12 @@ import (
 	"shanhu.io/misc/signer"
 )
 
-// SignUpRequest contains information of a sign up request.
-type SignUpRequest struct {
-	Method string
-	ID     string
-	Name   string // Screen name.
-	Email  string
-}
-
 // SignUp is an HTTP module that handles user signups.
 type SignUp struct {
 	google     *google
 	github     *github
 	router     *aries.Router
-	reqHandler func(c *aries.C, req *SignUpRequest) error
+	reqHandler func(c *aries.C, user *UserMeta) error
 }
 
 // SignUpConfig is the config for creating a signup module.
@@ -31,7 +23,7 @@ type SignUpConfig struct {
 	Google   *GoogleApp
 	GitHub   *GitHubApp
 
-	HandleRequest func(c *aries.C, req *SignUpRequest) error
+	HandleRequest func(c *aries.C, user *UserMeta) error
 }
 
 // NewSignUp creates a new sign up module.
@@ -97,12 +89,6 @@ func (s *SignUp) callback(method string, x metaExchange) aries.Func {
 			)
 		}
 
-		req := &SignUpRequest{
-			Method: method,
-			ID:     user.id,
-			Name:   user.name,
-			Email:  user.email,
-		}
-		return s.reqHandler(c, req)
+		return s.reqHandler(c, user)
 	}
 }

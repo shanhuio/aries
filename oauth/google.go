@@ -52,7 +52,7 @@ func newGoogleWithUserInfo(app *GoogleApp, s *signer.Sessions) *google {
 
 func (g *google) client() *Client { return g.c }
 
-func (g *google) callback(c *aries.C) (*userMeta, *State, error) {
+func (g *google) callback(c *aries.C) (*UserMeta, *State, error) {
 	tok, state, err := g.c.TokenState(c)
 	if err != nil {
 		return nil, nil, err
@@ -79,9 +79,10 @@ func (g *google) callback(c *aries.C) (*userMeta, *State, error) {
 	if name == "" {
 		name = "no-name"
 	}
-	return &userMeta{
-		id:    email,
-		name:  name,
-		email: email,
+	return &UserMeta{
+		Method: MethodGoogle,
+		ID:     email,
+		Name:   name,
+		Email:  email,
 	}, state, nil
 }

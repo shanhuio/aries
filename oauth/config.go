@@ -64,7 +64,7 @@ type Config struct {
 	KeyStore KeyStore
 
 	// LoginCheck exchanges Oauth2 ID's for user ID.
-	LoginCheck func(c *aries.C, method, id string) (string, error)
+	LoginCheck func(c *aries.C, user *UserMeta) (string, error)
 
 	// Check checks the user id and returns the user account structure.
 	Check func(user string) (interface{}, int, error)
@@ -72,11 +72,11 @@ type Config struct {
 
 // MapGitHub is a login check function that only allows
 // github login. It maps the user ID directly from GitHub users.
-func MapGitHub(c *aries.C, method, id string) (string, error) {
-	if method != "github" {
+func MapGitHub(c *aries.C, u *UserMeta) (string, error) {
+	if u.Method != MethodGitHub {
 		return "", errcode.InvalidArgf(
-			"login with %q not supported", method,
+			"login with %q not supported", u.Method,
 		)
 	}
-	return id, nil
+	return u.ID, nil
 }

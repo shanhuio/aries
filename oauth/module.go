@@ -163,17 +163,17 @@ func (m *Module) SetupCookie(c *aries.C, user string) {
 }
 
 func (m *Module) signIn(
-	c *aries.C, method, user string, state *State,
+	c *aries.C, user *UserMeta, state *State,
 ) error {
 	if m.c.LoginCheck == nil {
 		if !state.NoCookie {
-			m.SetupCookie(c, user)
+			m.SetupCookie(c, user.ID)
 		}
 		c.Redirect(state.Dest)
 		return nil
 	}
 
-	id, err := m.c.LoginCheck(c, method, user)
+	id, err := m.c.LoginCheck(c, user)
 	if err != nil {
 		return err
 	}
@@ -273,6 +273,6 @@ func (m *Module) callbackHandler(method string, x metaExchange) aries.Func {
 			)
 		}
 
-		return m.signIn(c, method, user.id, state)
+		return m.signIn(c, user, state)
 	}
 }

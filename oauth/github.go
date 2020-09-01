@@ -59,7 +59,7 @@ func newGitHub(app *GitHubApp, s *signer.Sessions) *github {
 
 func (g *github) client() *Client { return g.c }
 
-func (g *github) callback(c *aries.C) (*userMeta, *State, error) {
+func (g *github) callback(c *aries.C) (*UserMeta, *State, error) {
 	tok, state, err := g.c.TokenState(c)
 	if err != nil {
 		return nil, nil, err
@@ -105,10 +105,11 @@ func (g *github) callback(c *aries.C) (*userMeta, *State, error) {
 			}
 		}
 	}
-	meta := &userMeta{
-		id:    strconv.Itoa(user.ID),
-		name:  user.Login,
-		email: email,
+	meta := &UserMeta{
+		Method: MethodGitHub,
+		ID:     strconv.Itoa(user.ID),
+		Name:   user.Login,
+		Email:  email,
 	}
 	return meta, state, nil
 }

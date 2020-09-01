@@ -35,7 +35,7 @@ func newDigitalOcean(
 
 func (d *digitalOcean) client() *Client { return d.c }
 
-func (d *digitalOcean) callback(c *aries.C) (*userMeta, *State, error) {
+func (d *digitalOcean) callback(c *aries.C) (*UserMeta, *State, error) {
 	tok, state, err := d.c.TokenState(c)
 	if err != nil {
 		return nil, nil, err
@@ -49,5 +49,8 @@ func (d *digitalOcean) callback(c *aries.C) (*userMeta, *State, error) {
 		return nil, nil, err
 	}
 
-	return &userMeta{id: account.UUID}, state, nil
+	return &UserMeta{
+		Method: MethodDigitalOcean,
+		ID:     account.UUID,
+	}, state, nil
 }
