@@ -23,6 +23,8 @@ type Module struct {
 
 	sessionRefresh time.Duration
 	clients        map[string]*Client
+
+	r *aries.Router
 }
 
 // NewModule creates a new oauth module with the given config.
@@ -31,7 +33,6 @@ func NewModule(c *Config) *Module {
 	if redirect == "" {
 		redirect = "/"
 	}
-
 	sessionLifeTime := c.SessionLifeTime
 	if sessionLifeTime <= 0 {
 		sessionLifeTime = time.Hour * 24 * 7 // roughly a week
@@ -64,20 +65,19 @@ func NewModule(c *Config) *Module {
 	if c.DigitalOcean != nil {
 		ret.digitalOcean = newDigitalOcean(c.DigitalOcean, states)
 	}
+	ret.r = ret.router()
+
 	return ret
 }
 
-type service struct {
-	r *aries.Router
-	m *Module
-}
-
-func (s *service) Setup(c *aries.C) error {
-	_, err := s.m.Check(c)
+// Setup sets up the credentials for the request.
+func (m *Module) Setup(c *aries.C) error {
+	_, err := m.Check(c)
 	return err
 }
 
-func (s *service) Serve(c *aries.C) error { return s.r.Serve(c) }
+// Serve serves the routes for signing in and callbacks.
+func (m *Module) Serve(c *aries.C) error { return m.r.Serve(c) }
 
 func (m *Module) pubKeySignIn(c *aries.C, r *LoginRequest) (*Creds, error) {
 	if r.SignedTime == nil {
@@ -133,8 +133,7 @@ func (m *Module) addProvider(r *aries.Router, p provider) {
 	r.File(path.Join(method, "callback"), m.callbackHandler(method, p))
 }
 
-// Auth makes a aries.Auth that executes the oauth flow on the server side.
-func (m *Module) Auth() aries.Auth {
+func (m *Module) router() *aries.Router {
 	r := aries.NewRouter()
 	if m.c.Bypass != "" {
 		r.File("signin-bypass", func(c *aries.C) error {
@@ -148,7 +147,6 @@ func (m *Module) Auth() aries.Auth {
 		c.Redirect(m.redirect)
 		return nil
 	})
-
 	if m.c.KeyStore != nil {
 		r.JSONCallMust("pubkey/signin", m.pubKeySignIn)
 	}
@@ -161,9 +159,11 @@ func (m *Module) Auth() aries.Auth {
 	if do := m.digitalOcean; do != nil {
 		m.addProvider(r, do)
 	}
-
-	return &service{m: m, r: r}
+	return r
 }
+
+// Auth makes a aries.Auth that executes the oauth flow on the server side.
+func (m *Module) Auth() aries.Auth { return m }
 
 func readSessionToken(c *aries.C) (string, string) {
 	if bearer := aries.Bearer(c); bearer != "" {
@@ -195,7 +195,6 @@ func (m *Module) signIn(c *aries.C, user *UserMeta, state *State) error {
 	if id == "" {
 		return nil
 	}
-
 	if !state.NoCookie {
 		m.SetupCookie(c, id)
 	}
