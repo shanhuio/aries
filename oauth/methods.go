@@ -5,4 +5,5 @@ const (
 	MethodGitHub       = "github"
 	MethodGoogle       = "google"
 	MethodDigitalOcean = "digitalocean"
+	MethodBitbucket    = "bitbucket"
 )
