@@ -56,7 +56,7 @@ func New(c *Config) *Mailman {
 
 	return &Mailman{
 		config: oc,
-		client: oauth.NewClient(oc, states),
+		client: oauth.NewClient(oc, states, oauth.MethodGoogle),
 		token:  c.Token,
 	}
 }

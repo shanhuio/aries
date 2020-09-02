@@ -9,6 +9,7 @@ import (
 	gh "golang.org/x/oauth2/github"
 	"shanhu.io/aries"
 	"shanhu.io/misc/signer"
+	"shanhu.io/misc/strutil"
 )
 
 // GitHubApp is the configuration of a GitHub Oauth App.
@@ -16,6 +17,9 @@ type GitHubApp struct {
 	ID          string
 	Secret      string
 	RedirectURL string
+
+	WithEmail bool
+	Scopes    []string
 }
 
 type github struct {
@@ -25,18 +29,20 @@ type github struct {
 
 const githubEmailScope = "user:email"
 
-func newGitHubWithScopes(
-	app *GitHubApp, s *signer.Sessions, scopes []string,
-) *github {
+func newGitHub(app *GitHubApp, s *signer.Sessions) *github {
+	scopeSet := make(map[string]bool)
+	if app.WithEmail {
+		scopeSet[githubEmailScope] = true
+	}
+	for _, scope := range app.Scopes {
+		scopeSet[scope] = true
+	}
+	scopes := strutil.SortedList(scopeSet)
 	if scopes == nil {
 		scopes = []string{}
 	}
-	queryEmail := false
-	for _, scope := range scopes {
-		if scope == githubEmailScope {
-			queryEmail = true
-		}
-	}
+	queryEmail := scopeSet[githubEmailScope]
+
 	c := NewClient(
 		&oauth2.Config{
 			ClientID:     app.ID,
@@ -44,17 +50,9 @@ func newGitHubWithScopes(
 			Scopes:       scopes, // only need public information
 			Endpoint:     gh.Endpoint,
 			RedirectURL:  app.RedirectURL,
-		}, s,
+		}, s, MethodGitHub,
 	)
 	return &github{c: c, queryEmail: queryEmail}
-}
-
-func newGitHubWithEmail(app *GitHubApp, s *signer.Sessions) *github {
-	return newGitHubWithScopes(app, s, []string{githubEmailScope})
-}
-
-func newGitHub(app *GitHubApp, s *signer.Sessions) *github {
-	return newGitHubWithScopes(app, s, nil)
 }
 
 func (g *github) client() *Client { return g.c }

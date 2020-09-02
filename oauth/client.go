@@ -26,15 +26,22 @@ type State struct {
 type Client struct {
 	config *oauth2.Config
 	states *signer.Sessions
+	method string
 }
 
 // NewClient creates a new oauth client for oauth2 exchnages.
-func NewClient(c *oauth2.Config, states *signer.Sessions) *Client {
+func NewClient(
+	c *oauth2.Config, states *signer.Sessions, m string,
+) *Client {
 	return &Client{
 		config: c,
 		states: states,
+		method: m,
 	}
 }
+
+// Method returns the method class of this oauth2 client.
+func (c *Client) Method() string { return c.method }
 
 // SignInURL returns the online signin URL for redirection.
 func (c *Client) SignInURL(s *State) string {

@@ -1,49 +1,29 @@
 package oauth
 
 import (
-	"log"
-	"time"
-
 	"shanhu.io/aries"
-	"shanhu.io/misc/errcode"
-	"shanhu.io/misc/signer"
 )
 
 // SignUp is an HTTP module that handles user signups.
 type SignUp struct {
-	google     *google
-	github     *github
-	router     *aries.Router
-	reqHandler func(c *aries.C, user *UserMeta) error
+	redirect string
+	module   *Module
+	router   *aries.Router
 }
 
 // SignUpConfig is the config for creating a signup module.
 type SignUpConfig struct {
-	StateKey []byte
-	Google   *GoogleApp
-	GitHub   *GitHubApp
-
-	HandleRequest func(c *aries.C, user *UserMeta) error
+	Redirect string
 }
 
 // NewSignUp creates a new sign up module.
-func NewSignUp(c *SignUpConfig) *SignUp {
+func NewSignUp(m *Module, c *SignUpConfig) *SignUp {
 	s := &SignUp{
-		reqHandler: c.HandleRequest,
-	}
-
-	const ttl time.Duration = time.Hour
-	states := signer.NewSessions(c.StateKey, ttl)
-
-	if c.Google != nil {
-		s.google = newGoogleWithUserInfo(c.Google, states)
-	}
-	if c.GitHub != nil {
-		s.github = newGitHubWithEmail(c.GitHub, states)
+		redirect: c.Redirect,
+		module:   m,
 	}
 
 	s.router = s.makeRouter()
-
 	return s
 }
 
@@ -54,40 +34,21 @@ func (s *SignUp) Serve(c *aries.C) error {
 
 func (s *SignUp) makeRouter() *aries.Router {
 	r := aries.NewRouter()
-
-	if g := s.google; g != nil {
-		r.File("google", s.handler(g.client()))
-		r.File("google:callback", s.callback(MethodGoogle, g))
+	methods := s.module.Methods()
+	for _, m := range methods {
+		r.File(m, s.handler(m))
 	}
-
-	if g := s.github; g != nil {
-		r.File("github", s.handler(g.client()))
-		r.File("github:callback", s.callback(MethodGitHub, g))
-	}
-
 	return r
 }
 
-func (s *SignUp) handler(client *Client) aries.Func {
+func (s *SignUp) handler(m string) aries.Func {
 	return func(c *aries.C) error {
-		state := new(State)
-		c.Redirect(client.SignInURL(state))
+		state := &State{
+			Dest:     s.redirect,
+			NoCookie: true,
+			Purpose:  "signup",
+		}
+		s.module.SignIn(c, m, state)
 		return nil
-	}
-}
-
-func (s *SignUp) callback(method string, x metaExchange) aries.Func {
-	return func(c *aries.C) error {
-		user, _, err := x.callback(c)
-		if err != nil {
-			log.Printf("%s callback: %s", method, err)
-			return errcode.Internalf("%s callback failed", method)
-		}
-		if user == nil {
-			return errcode.Internalf(
-				"%s callback: get user info failed", method,
-			)
-		}
-		return s.reqHandler(c, user)
 	}
 }

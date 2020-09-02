@@ -28,7 +28,7 @@ func newDigitalOcean(
 			ClientID:     app.ID,
 			ClientSecret: app.Secret,
 			Endpoint:     digitalOceanEndpoint,
-		}, s,
+		}, s, MethodDigitalOcean,
 	)
 	return &digitalOcean{c: c}
 }

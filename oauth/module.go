@@ -2,6 +2,8 @@ package oauth
 
 import (
 	"log"
+	"path"
+	"sort"
 	"time"
 
 	"shanhu.io/aries"
@@ -20,6 +22,7 @@ type Module struct {
 	redirect     string
 
 	sessionRefresh time.Duration
+	clients        map[string]*Client
 }
 
 // NewModule creates a new oauth module with the given config.
@@ -46,6 +49,7 @@ func NewModule(c *Config) *Module {
 		),
 		redirect:       redirect,
 		sessionRefresh: sessionRefresh,
+		clients:        make(map[string]*Client),
 	}
 
 	const ttl time.Duration = time.Hour
@@ -111,6 +115,24 @@ func (m *Module) pubKeySignIn(c *aries.C, r *LoginRequest) (*Creds, error) {
 	}, nil
 }
 
+// Methods returns the list of supported methods.
+func (m *Module) Methods() []string {
+	var ms []string
+	for k := range m.clients {
+		ms = append(ms, k)
+	}
+	sort.Strings(ms)
+	return ms
+}
+
+func (m *Module) addProvider(r *aries.Router, p provider) {
+	c := p.client()
+	method := c.Method()
+	m.clients[method] = c
+	r.File(path.Join(method, "signin"), m.signInHandler(c))
+	r.File(path.Join(method, "callback"), m.callbackHandler(method, p))
+}
+
 // Auth makes a aries.Auth that executes the oauth flow on the server side.
 func (m *Module) Auth() aries.Auth {
 	r := aries.NewRouter()
@@ -130,20 +152,14 @@ func (m *Module) Auth() aries.Auth {
 	if m.c.KeyStore != nil {
 		r.JSONCallMust("pubkey/signin", m.pubKeySignIn)
 	}
-
 	if g := m.github; g != nil {
-		r.File("github/signin", m.signInHandler(g.client()))
-		r.File("github/callback", m.callbackHandler("github", g))
+		m.addProvider(r, g)
 	}
 	if g := m.google; g != nil {
-		r.File("google/signin", m.signInHandler(g.client()))
-		r.File("google/callback", m.callbackHandler("google", g))
+		m.addProvider(r, g)
 	}
 	if do := m.digitalOcean; do != nil {
-		r.File("digitalocean/signin", m.signInHandler(do.client()))
-		r.File("digitalocean/callback", m.callbackHandler(
-			"digitalocean", do,
-		))
+		m.addProvider(r, do)
 	}
 
 	return &service{m: m, r: r}
@@ -187,9 +203,7 @@ func (m *Module) signIn(c *aries.C, user *UserMeta, state *State) error {
 	return nil
 }
 
-func (m *Module) checkUser(c *aries.C) (
-	valid, needRefresh bool, err error,
-) {
+func (m *Module) checkUser(c *aries.C) (valid, needRefresh bool, err error) {
 	c.User = ""
 
 	session, method := readSessionToken(c)
@@ -248,19 +262,22 @@ func (m *Module) AuthSetup(c *aries.C) { m.Check(c) }
 
 func (m *Module) signInHandler(client *Client) aries.Func {
 	return func(c *aries.C) error {
-		q := c.Req.URL.Query()
-		redirect := q.Get("redirect")
-		if redirect == "" {
-			redirect = m.redirect
-		}
-		state := &State{Dest: redirect}
-		if q.Get("cookie") == "false" {
-			state.NoCookie = true
-		}
-		state.Purpose = q.Get("purpose")
+		state := &State{Dest: m.redirect}
 		c.Redirect(client.SignInURL(state))
 		return nil
 	}
+}
+
+// SignIn redirects the incoming request to a particular client's sign-in
+// URL. If the client is not found, it redirects to default redirect page.
+func (m *Module) SignIn(c *aries.C, method string, s *State) error {
+	client, ok := m.clients[method]
+	if !ok {
+		c.Redirect(m.redirect)
+		return nil
+	}
+	c.Redirect(client.SignInURL(s))
+	return nil
 }
 
 func (m *Module) callbackHandler(method string, x metaExchange) aries.Func {
@@ -275,7 +292,6 @@ func (m *Module) callbackHandler(method string, x metaExchange) aries.Func {
 				"%s callback: get user info failed", method,
 			)
 		}
-
 		return m.signIn(c, user, state)
 	}
 }

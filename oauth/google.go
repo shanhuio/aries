@@ -8,6 +8,7 @@ import (
 	goauth2 "golang.org/x/oauth2/google"
 	"shanhu.io/aries"
 	"shanhu.io/misc/signer"
+	"shanhu.io/misc/strutil"
 )
 
 // GoogleApp stores the configuration of a Google oauth2 application.
@@ -15,13 +16,26 @@ type GoogleApp struct {
 	ID          string
 	Secret      string
 	RedirectURL string
+
+	WithProfile bool
+	Scopes      []string
 }
+
+const (
+	googleEmailScope   = "https://www.googleapis.com/auth/userinfo.email"
+	googleProfileScope = "https://www.googleapis.com/auth/userinfo.profile"
+)
 
 type google struct{ c *Client }
 
-func newGoogleWithScopes(
-	app *GoogleApp, s *signer.Sessions, scopes []string,
-) *google {
+func newGoogle(app *GoogleApp, s *signer.Sessions) *google {
+	scopeSet := make(map[string]bool)
+	// Google OAuth has to have at least one scope to get user ID.
+	scopeSet[googleEmailScope] = true
+	if app.WithProfile {
+		scopeSet[googleProfileScope] = true
+	}
+	scopes := strutil.SortedList(scopeSet)
 	if scopes == nil {
 		scopes = []string{}
 	}
@@ -32,22 +46,9 @@ func newGoogleWithScopes(
 			Scopes:       scopes,
 			Endpoint:     goauth2.Endpoint,
 			RedirectURL:  app.RedirectURL,
-		}, s,
+		}, s, MethodGoogle,
 	)
 	return &google{c: c}
-}
-
-func newGoogle(app *GoogleApp, s *signer.Sessions) *google {
-	scopes := []string{"https://www.googleapis.com/auth/userinfo.email"}
-	return newGoogleWithScopes(app, s, scopes)
-}
-
-func newGoogleWithUserInfo(app *GoogleApp, s *signer.Sessions) *google {
-	scopes := []string{
-		"https://www.googleapis.com/auth/userinfo.email",
-		"https://www.googleapis.com/auth/userinfo.profile",
-	}
-	return newGoogleWithScopes(app, s, scopes)
 }
 
 func (g *google) client() *Client { return g.c }
