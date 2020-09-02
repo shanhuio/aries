@@ -7,6 +7,7 @@ import (
 // SignUp is an HTTP module that handles user signups.
 type SignUp struct {
 	redirect string
+	purpose  string
 	module   *Module
 	router   *aries.Router
 }
@@ -19,6 +20,7 @@ type SignUpConfig struct {
 // NewSignUp creates a new sign up module.
 func NewSignUp(m *Module, c *SignUpConfig) *SignUp {
 	s := &SignUp{
+		purpose: "signup",
 		redirect: c.Redirect,
 		module:   m,
 	}
@@ -41,12 +43,17 @@ func (s *SignUp) makeRouter() *aries.Router {
 	return r
 }
 
+// Purpose returns the purpose string.
+func (s *SignUp) Purpose() string {
+	return s.purpose
+}
+
 func (s *SignUp) handler(m string) aries.Func {
 	return func(c *aries.C) error {
 		state := &State{
 			Dest:     s.redirect,
 			NoCookie: true,
-			Purpose:  "signup",
+			Purpose:  s.purpose,
 		}
 		s.module.SignIn(c, m, state)
 		return nil
