@@ -1,8 +1,6 @@
 package oauth
 
 import (
-	"log"
-
 	"shanhu.io/aries"
 )
 
@@ -40,7 +38,6 @@ func (s *SignUp) makeRouter() *aries.Router {
 	r := aries.NewRouter()
 	methods := s.module.Methods()
 	for _, m := range methods {
-		log.Println(m)
 		r.File(m, s.handler(m))
 	}
 	return r
