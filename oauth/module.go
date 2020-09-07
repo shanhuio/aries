@@ -229,12 +229,7 @@ func (m *Module) checkUser(c *aries.C) (valid, needRefresh bool, err error) {
 	if lvl < 0 {
 		return false, false, nil
 	}
-
-	c.User = user
-	c.UserLevel = lvl
-	if u != nil {
-		c.Data["user"] = u
-	}
+	setUserContext(c, user, u, lvl)
 	return true, needRefresh, nil
 }
 
