@@ -5,6 +5,14 @@ import (
 	"net"
 )
 
+// SinkDialFunc returns a dialing function that always dials to the same
+// address.
+func SinkDialFunc(sinkAddr string) func(
+	ctx context.Context, net, addr string,
+) (net.Conn, error) {
+	return sink(sinkAddr)
+}
+
 func sink(sinkAddr string) func(
 	ctx context.Context, net, addr string,
 ) (net.Conn, error) {
