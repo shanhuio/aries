@@ -73,7 +73,9 @@ func (s *FileKeyStore) Keys(user string) ([]*rsautil.PublicKey, error) {
 	return rsautil.ParsePublicKeys(bs)
 }
 
-func simpleName(user string) bool {
+// IsSimpleName checks if the user name is a simple one that is safe to
+// fetch a key.
+func IsSimpleName(user string) bool {
 	for _, r := range user {
 		if r >= 'a' && r <= 'z' {
 			continue
@@ -103,7 +105,7 @@ func NewDirKeyStore(dir string) *DirKeyStore {
 
 // Keys returns the public keys of the given user.
 func (s *DirKeyStore) Keys(user string) ([]*rsautil.PublicKey, error) {
-	if !simpleName(user) {
+	if !IsSimpleName(user) {
 		return nil, errcode.InvalidArgf("unsupported user name: %q", user)
 	}
 	bs, err := ioutil.ReadFile(filepath.Join(s.dir, user))
@@ -127,7 +129,7 @@ func NewWebKeyStore(base *url.URL) *WebKeyStore {
 
 // Keys returns the public keys of the given user.
 func (s *WebKeyStore) Keys(user string) ([]*rsautil.PublicKey, error) {
-	if !simpleName(user) {
+	if !IsSimpleName(user) {
 		return nil, errcode.InvalidArgf("unsupported user name: %q", user)
 	}
 	bs, err := s.client.GetBytes(user)
