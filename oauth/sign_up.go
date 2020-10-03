@@ -8,6 +8,7 @@ import (
 type SignUp struct {
 	redirect string
 	purpose  string
+	signIn   bool
 	module   *Module
 	router   *aries.Router
 }
@@ -15,6 +16,9 @@ type SignUp struct {
 // SignUpConfig is the config for creating a signup module.
 type SignUpConfig struct {
 	Redirect string
+
+	// Whether keep user signed in after signing up.
+	SignIn bool
 }
 
 // NewSignUp creates a new sign up module.
@@ -23,6 +27,7 @@ func NewSignUp(m *Module, c *SignUpConfig) *SignUp {
 		purpose:  "signup",
 		redirect: c.Redirect,
 		module:   m,
+		signIn:   c.SignIn,
 	}
 
 	s.router = s.makeRouter()
@@ -52,7 +57,7 @@ func (s *SignUp) handler(m string) aries.Func {
 	return func(c *aries.C) error {
 		state := &State{
 			Dest:     s.redirect,
-			NoCookie: true,
+			NoCookie: !s.signIn,
 			Purpose:  s.purpose,
 		}
 		s.module.SignIn(c, m, state)
