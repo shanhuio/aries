@@ -2,12 +2,9 @@ package identity
 
 import (
 	"io/ioutil"
-	"net/url"
-	"path/filepath"
 	"sync"
 
 	"shanhu.io/misc/errcode"
-	"shanhu.io/misc/httputil"
 	"shanhu.io/misc/rsautil"
 )
 
@@ -95,72 +92,4 @@ func IsSimpleName(user string) bool {
 		return false
 	}
 	return true
-}
-
-// DirKeyRegistry is a storage of pulic keys with all the keys saved in a
-// directory.
-type DirKeyRegistry struct {
-	dir string
-}
-
-// NewDirKeyRegistry creates a new keystore with public keys saved in
-// files under a directory.
-func NewDirKeyRegistry(dir string) *DirKeyRegistry {
-	return &DirKeyRegistry{dir: dir}
-}
-
-// Keys returns the public keys of the given user.
-func (s *DirKeyRegistry) Keys(user string) ([]*rsautil.PublicKey, error) {
-	if !IsSimpleName(user) {
-		return nil, errcode.InvalidArgf("unsupported user name: %q", user)
-	}
-	bs, err := ioutil.ReadFile(filepath.Join(s.dir, user))
-	if err != nil {
-		return nil, err
-	}
-	return rsautil.ParsePublicKeys(bs)
-}
-
-// WebKeyRegistry is a storage of public keys backed by a web site.
-type WebKeyRegistry struct {
-	client *httputil.Client
-}
-
-// NewWebKeyRegistry creates a new key store backed by a web site
-// at the given base URL.
-func NewWebKeyRegistry(base *url.URL) *WebKeyRegistry {
-	client := &httputil.Client{Server: base}
-	return &WebKeyRegistry{client: client}
-}
-
-// Keys returns the public keys of the given user.
-func (s *WebKeyRegistry) Keys(user string) ([]*rsautil.PublicKey, error) {
-	if !IsSimpleName(user) {
-		return nil, errcode.InvalidArgf("unsupported user name: %q", user)
-	}
-	bs, err := s.client.GetBytes(user)
-	if err != nil {
-		return nil, err
-	}
-	return rsautil.ParsePublicKeys(bs)
-}
-
-// OpenKeyRegistry connects to a keystore based on the given URL string.
-func OpenKeyRegistry(urlStr string) (KeyRegistry, error) {
-	u, err := url.Parse(urlStr)
-	if err != nil {
-		return nil, err
-	}
-
-	switch u.Scheme {
-	case "http", "https":
-		u, err := url.Parse(urlStr)
-		if err != nil {
-			return nil, err
-		}
-		return NewWebKeyRegistry(u), nil
-	case "file", "":
-		return NewDirKeyRegistry(u.Path), nil
-	}
-	return nil, errcode.InvalidArgf("unsupported url scheme: %q", u.Scheme)
 }
