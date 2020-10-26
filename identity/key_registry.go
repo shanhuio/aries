@@ -2,6 +2,7 @@ package identity
 
 import (
 	"io/ioutil"
+	"path/filepath"
 	"sync"
 
 	"shanhu.io/misc/errcode"
@@ -46,6 +47,36 @@ func (r *MemKeyRegistry) Keys(user string) ([]*rsautil.PublicKey, error) {
 		return nil, errUserNotFound(user)
 	}
 	return keys, nil
+}
+
+// NewDirKeyRegistry creates a new keystore with public keys saved in
+// files under a directory.
+func NewDirKeyRegistry(dir string) (*MemKeyRegistry, error) {
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	m := NewMemKeyRegistry()
+	for _, f := range files {
+		if f.IsDir() {
+			continue
+		}
+		name := f.Name()
+		if !IsSimpleName(name) {
+			continue
+		}
+		bs, err := ioutil.ReadFile(filepath.Join(dir, name))
+		if err != nil {
+			return nil, errcode.Annotatef(err, "read key %q", name)
+		}
+		keys, err := rsautil.ParsePublicKeys(bs)
+		if err != nil {
+			return nil, errcode.Annotatef(err, "parse key %q", name)
+		}
+		m.Set(name, keys)
+	}
+
+	return m, nil
 }
 
 // FileKeyRegistry is a storage of public keys backed by a file system.
