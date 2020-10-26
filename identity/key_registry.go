@@ -1,9 +1,10 @@
-package oauth
+package identity
 
 import (
 	"io/ioutil"
 	"net/url"
 	"path/filepath"
+	"sync"
 
 	"shanhu.io/misc/errcode"
 	"shanhu.io/misc/httputil"
@@ -14,50 +15,55 @@ func errUserNotFound(u string) error {
 	return errcode.NotFoundf("user %q not found", u)
 }
 
-// KeyStore loads public keys for a user.
-type KeyStore interface {
+// KeyRegistry loads public keys for a user.
+type KeyRegistry interface {
 	Keys(user string) ([]*rsautil.PublicKey, error)
 }
 
-// MemKeyStore is a storage of public keys in memory.
-type MemKeyStore struct {
+// MemKeyRegistry is a storage of public keys in memory.
+type MemKeyRegistry struct {
+	mu   sync.RWMutex
 	keys map[string][]*rsautil.PublicKey
 }
 
-// NewMemKeyStore creates a new empty key store.
-func NewMemKeyStore() *MemKeyStore {
-	return &MemKeyStore{
+// NewMemKeyRegistry creates a new empty key store.
+func NewMemKeyRegistry() *MemKeyRegistry {
+	return &MemKeyRegistry{
 		keys: make(map[string][]*rsautil.PublicKey),
 	}
 }
 
 // Set sets the key for the given user.
-func (s *MemKeyStore) Set(user string, keys []*rsautil.PublicKey) {
-	s.keys[user] = keys
+func (r *MemKeyRegistry) Set(user string, keys []*rsautil.PublicKey) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.keys[user] = keys
 }
 
 // Keys returns the public keys for the given user.
-func (s *MemKeyStore) Keys(user string) ([]*rsautil.PublicKey, error) {
-	keys, found := s.keys[user]
+func (r *MemKeyRegistry) Keys(user string) ([]*rsautil.PublicKey, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	keys, found := r.keys[user]
 	if !found {
 		return nil, errUserNotFound(user)
 	}
 	return keys, nil
 }
 
-// FileKeyStore is a storage of public keys backed by a file system.
-type FileKeyStore struct {
+// FileKeyRegistry is a storage of public keys backed by a file system.
+type FileKeyRegistry struct {
 	keys map[string]string
 }
 
-// NewFileKeyStore creates a new key store given a key file
+// NewFileKeyRegistry creates a new key store given a key file
 // map for each users that has a key.
-func NewFileKeyStore(keys map[string]string) *FileKeyStore {
-	return &FileKeyStore{keys: keys}
+func NewFileKeyRegistry(keys map[string]string) *FileKeyRegistry {
+	return &FileKeyRegistry{keys: keys}
 }
 
 // Keys returns the public keys for the given user.
-func (s *FileKeyStore) Keys(user string) ([]*rsautil.PublicKey, error) {
+func (s *FileKeyRegistry) Keys(user string) ([]*rsautil.PublicKey, error) {
 	if s.keys == nil {
 		return nil, errUserNotFound(user)
 	}
@@ -91,20 +97,20 @@ func IsSimpleName(user string) bool {
 	return true
 }
 
-// DirKeyStore is a storage of pulic keys with all the keys saved in a
+// DirKeyRegistry is a storage of pulic keys with all the keys saved in a
 // directory.
-type DirKeyStore struct {
+type DirKeyRegistry struct {
 	dir string
 }
 
-// NewDirKeyStore creates a new keystore with public keys saved in
+// NewDirKeyRegistry creates a new keystore with public keys saved in
 // files under a directory.
-func NewDirKeyStore(dir string) *DirKeyStore {
-	return &DirKeyStore{dir: dir}
+func NewDirKeyRegistry(dir string) *DirKeyRegistry {
+	return &DirKeyRegistry{dir: dir}
 }
 
 // Keys returns the public keys of the given user.
-func (s *DirKeyStore) Keys(user string) ([]*rsautil.PublicKey, error) {
+func (s *DirKeyRegistry) Keys(user string) ([]*rsautil.PublicKey, error) {
 	if !IsSimpleName(user) {
 		return nil, errcode.InvalidArgf("unsupported user name: %q", user)
 	}
@@ -115,20 +121,20 @@ func (s *DirKeyStore) Keys(user string) ([]*rsautil.PublicKey, error) {
 	return rsautil.ParsePublicKeys(bs)
 }
 
-// WebKeyStore is a storage of public keys backed by a web site.
-type WebKeyStore struct {
+// WebKeyRegistry is a storage of public keys backed by a web site.
+type WebKeyRegistry struct {
 	client *httputil.Client
 }
 
-// NewWebKeyStore creates a new key store backed by a web site
+// NewWebKeyRegistry creates a new key store backed by a web site
 // at the given base URL.
-func NewWebKeyStore(base *url.URL) *WebKeyStore {
+func NewWebKeyRegistry(base *url.URL) *WebKeyRegistry {
 	client := &httputil.Client{Server: base}
-	return &WebKeyStore{client: client}
+	return &WebKeyRegistry{client: client}
 }
 
 // Keys returns the public keys of the given user.
-func (s *WebKeyStore) Keys(user string) ([]*rsautil.PublicKey, error) {
+func (s *WebKeyRegistry) Keys(user string) ([]*rsautil.PublicKey, error) {
 	if !IsSimpleName(user) {
 		return nil, errcode.InvalidArgf("unsupported user name: %q", user)
 	}
@@ -139,8 +145,8 @@ func (s *WebKeyStore) Keys(user string) ([]*rsautil.PublicKey, error) {
 	return rsautil.ParsePublicKeys(bs)
 }
 
-// OpenKeyStore connects to a keystore based on the given URL string.
-func OpenKeyStore(urlStr string) (KeyStore, error) {
+// OpenKeyRegistry connects to a keystore based on the given URL string.
+func OpenKeyRegistry(urlStr string) (KeyRegistry, error) {
 	u, err := url.Parse(urlStr)
 	if err != nil {
 		return nil, err
@@ -152,9 +158,9 @@ func OpenKeyStore(urlStr string) (KeyStore, error) {
 		if err != nil {
 			return nil, err
 		}
-		return NewWebKeyStore(u), nil
+		return NewWebKeyRegistry(u), nil
 	case "file", "":
-		return NewDirKeyStore(u.Path), nil
+		return NewDirKeyRegistry(u.Path), nil
 	}
 	return nil, errcode.InvalidArgf("unsupported url scheme: %q", u.Scheme)
 }

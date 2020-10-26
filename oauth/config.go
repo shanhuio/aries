@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"shanhu.io/aries"
+	"shanhu.io/aries/identity"
 	"shanhu.io/misc/errcode"
 )
 
@@ -28,7 +29,7 @@ func (c *JSONConfig) Config() *Config {
 		StateKey:     []byte(c.StateKey),
 		SessionKey:   []byte(c.SessionKey),
 		Bypass:       c.SignInBypass,
-		KeyStore:     NewFileKeyStore(c.PublicKeys),
+		KeyRegistry:  identity.NewFileKeyRegistry(c.PublicKeys),
 	}
 }
 
@@ -61,7 +62,7 @@ type Config struct {
 	Bypass   string
 	Redirect string
 
-	KeyStore KeyStore
+	KeyRegistry identity.KeyRegistry
 
 	// SignInCheck exchanges OAuth2 ID's for user ID.
 	SignInCheck func(c *aries.C, u *UserMeta, purpose string) (string, error)

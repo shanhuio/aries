@@ -1,4 +1,4 @@
-package oauth
+package identity
 
 import (
 	"testing"
@@ -12,7 +12,7 @@ import (
 	"shanhu.io/misc/rsautil"
 )
 
-func TestMemKeyStore(t *testing.T) {
+func TestMemKeyRegistry(t *testing.T) {
 	keyBytes, err := ioutil.ReadFile("testdata/keys/yumuzi")
 	if err != nil {
 		t.Fatal(err)
@@ -23,7 +23,7 @@ func TestMemKeyStore(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s := NewMemKeyStore()
+	s := NewMemKeyRegistry()
 	s.Set("h8liu", keys)
 
 	got, err := s.Keys("h8liu")
@@ -43,7 +43,7 @@ func TestMemKeyStore(t *testing.T) {
 	}
 }
 
-func testFileKeyStore(t *testing.T, ks KeyStore) {
+func testFileKeyRegistry(t *testing.T, ks KeyRegistry) {
 	t.Helper()
 
 	for _, test := range []struct {
@@ -79,16 +79,16 @@ func testFileKeyStore(t *testing.T, ks KeyStore) {
 	}
 }
 
-func TestFileKeyStore(t *testing.T) {
-	s := NewFileKeyStore(map[string]string{
+func TestFileKeyRegistry(t *testing.T) {
+	s := NewFileKeyRegistry(map[string]string{
 		"h8liu":  "testdata/keys/h8liu",
 		"yumuzi": "testdata/keys/yumuzi",
 	})
 
-	testFileKeyStore(t, s)
+	testFileKeyRegistry(t, s)
 }
 
-func TestWebKeyStore(t *testing.T) {
+func TestWebKeyRegistry(t *testing.T) {
 	static := aries.NewStaticFiles("testdata/keys")
 	s := httptest.NewServer(aries.Serve(static))
 	defer s.Close()
@@ -98,6 +98,6 @@ func TestWebKeyStore(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ks := NewWebKeyStore(u)
-	testFileKeyStore(t, ks)
+	ks := NewWebKeyRegistry(u)
+	testFileKeyRegistry(t, ks)
 }

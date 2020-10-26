@@ -84,7 +84,7 @@ func (m *Module) pubKeySignIn(c *aries.C, r *LoginRequest) (*Creds, error) {
 		return nil, errcode.InvalidArgf("signature missing")
 	}
 
-	keys, err := m.c.KeyStore.Keys(r.User)
+	keys, err := m.c.KeyRegistry.Keys(r.User)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +147,7 @@ func (m *Module) router() *aries.Router {
 		c.Redirect(m.redirect)
 		return nil
 	})
-	if m.c.KeyStore != nil {
+	if m.c.KeyRegistry != nil {
 		r.JSONCallMust("pubkey/signin", m.pubKeySignIn)
 	}
 	if g := m.github; g != nil {
