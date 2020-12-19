@@ -1,7 +1,7 @@
 package aries
 
 import (
-	"fmt"
+	"net/http"
 
 	"shanhu.io/misc/errcode"
 	"shanhu.io/misc/trie"
@@ -54,7 +54,7 @@ func (r *Router) File(p string, f Func) error {
 // Get adds a routing file node into the routing tree that handles GET
 // requests.
 func (r *Router) Get(p string, f Func) error {
-	return r.MethodFile("GET", p, f)
+	return r.MethodFile(http.MethodGet, p, f)
 }
 
 // JSONCall adds a JSON marshalled POST based RPC call node into the routing
@@ -135,7 +135,7 @@ func (r *Router) Serve(c *C) error {
 	}
 	n := r.nodes[p]
 	if n == nil {
-		panic(fmt.Errorf("route function not found for %q", p))
+		panic(errcode.InvalidArgf("route function not found for %q", p))
 	}
 
 	c.ShiftRoute(len(hitRoute))
