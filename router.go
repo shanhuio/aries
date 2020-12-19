@@ -3,6 +3,7 @@ package aries
 import (
 	"fmt"
 
+	"shanhu.io/misc/errcode"
 	"shanhu.io/misc/trie"
 )
 
@@ -17,8 +18,9 @@ type Router struct {
 }
 
 type routerNode struct {
-	s     Service
-	isDir bool
+	s      Service
+	isDir  bool
+	method string
 }
 
 // NewRouter creates a new router for filesystem like path routing.
@@ -38,9 +40,21 @@ func (r *Router) Index(f Func) { r.index = f }
 // not hit anything in the routing tree.
 func (r *Router) Default(f Func) { r.miss = f }
 
+// MethodFile adds a routing file node into the routing tree that accepts
+// only the given method.
+func (r *Router) MethodFile(m, p string, f Func) error {
+	return r.add(p, &routerNode{s: f, method: m})
+}
+
 // File adds a routing file node into the routing tree.
 func (r *Router) File(p string, f Func) error {
-	return r.add(p, &routerNode{s: f})
+	return r.MethodFile("", p, f)
+}
+
+// Get adds a routing file node into the routing tree that handles GET
+// requests.
+func (r *Router) Get(p string, f Func) error {
+	return r.MethodFile("GET", p, f)
 }
 
 // JSONCall adds a JSON marshalled POST based RPC call node into the routing
@@ -84,7 +98,7 @@ func (r *Router) add(p string, n *routerNode) error {
 		panic("trying to add empty route, use Index() instead")
 	}
 	if r.nodes[route.p] != nil {
-		return fmt.Errorf("path %s already assigned", route.p)
+		return errcode.InvalidArgf("path %s already assigned", route.p)
 	}
 
 	r.nodes[route.p] = n
@@ -126,6 +140,10 @@ func (r *Router) Serve(c *C) error {
 
 	c.ShiftRoute(len(hitRoute))
 	if n.isDir || (c.Rel() == "" && !c.PathIsDir()) {
+		m := c.Req.Method
+		if n.method != "" && m != n.method {
+			return errcode.InvalidArgf("unsupported method: %q", m)
+		}
 		return n.s.Serve(c)
 	}
 	return r.notFound(c)

@@ -18,7 +18,7 @@ func makeEchoRel(s string) Func {
 
 func TestRouter(t *testing.T) {
 	r := NewRouter()
-	r.File("something", StringFunc("xxx"))
+	r.Get("something", StringFunc("xxx"))
 	r.Dir("books", makeEchoRel("books"))
 
 	s := httptest.NewServer(Serve(r))
