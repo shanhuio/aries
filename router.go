@@ -57,13 +57,19 @@ func (r *Router) Get(p string, f Func) error {
 	return r.MethodFile(http.MethodGet, p, f)
 }
 
+// Post adds a routing file node into the routing tree that handles POST
+// requests.
+func (r *Router) Post(p string, f Func) error {
+	return r.MethodFile(http.MethodPost, p, f)
+}
+
 // JSONCall adds a JSON marshalled POST based RPC call node into the routing
 // tree. The function must be in the form of
 // `func(c *aries.C, req *RequestType) (resp *ResponseType, error)`,
 // where RequestType
 // and ResponseType are both JSON marshallable.
 func (r *Router) JSONCall(p string, f interface{}) error {
-	return r.File(p, JSONCall(f))
+	return r.Post(p, JSONCall(f))
 }
 
 // JSONCallMust is the same as JSONCall, but panics if there is an error.
