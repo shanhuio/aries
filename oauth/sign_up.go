@@ -43,7 +43,7 @@ func (s *SignUp) makeRouter() *aries.Router {
 	r := aries.NewRouter()
 	methods := s.module.Methods()
 	for _, m := range methods {
-		r.File(m, s.handler(m))
+		r.Get(m, s.handler(m))
 	}
 	return r
 }
