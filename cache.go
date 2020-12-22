@@ -1,6 +1,6 @@
 package aries
 
-// NoCache sets the Cache-Control header to "no-cache".
-func NoCache(c *C) {
-	c.Resp.Header().Set("Cache-Control", "no-cache")
+// NeverCache sets the Cache-Control header to "no-store".
+func NeverCache(c *C) {
+	c.Resp.Header().Set("Cache-Control", "no-store")
 }
