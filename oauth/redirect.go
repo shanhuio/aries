@@ -7,6 +7,19 @@ import (
 	"shanhu.io/misc/errcode"
 )
 
+// DiscardURLServerParts discards the server parts of an URL,
+// including scheme, host, port and user info.
+func DiscardURLServerParts(u *url.URL) *url.URL {
+	return &url.URL{
+		Path:        u.Path,
+		RawPath:     u.RawPath,
+		ForceQuery:  u.ForceQuery,
+		RawQuery:    u.RawQuery,
+		Fragment:    u.Fragment,
+		RawFragment: u.RawFragment,
+	}
+}
+
 // ParseRedirect parses an in-site redirection URL.
 // The server parts (scheme, host, port, user info) are discarded.
 func ParseRedirect(redirect string) (string, error) {
@@ -24,13 +37,5 @@ func ParseRedirect(redirect string) (string, error) {
 		)
 	}
 
-	cp := &url.URL{
-		Path:        u.Path,
-		RawPath:     u.RawPath,
-		ForceQuery:  u.ForceQuery,
-		RawQuery:    u.RawQuery,
-		Fragment:    u.Fragment,
-		RawFragment: u.RawFragment,
-	}
-	return cp.String(), nil
+	return DiscardURLServerParts(u).String(), nil
 }
