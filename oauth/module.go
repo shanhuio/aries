@@ -256,7 +256,15 @@ func (m *Module) AuthSetup(c *aries.C) { m.Check(c) }
 
 func (m *Module) signInHandler(client *Client) aries.Func {
 	return func(c *aries.C) error {
-		state := &State{Dest: m.redirect}
+		redirect := m.redirect
+		if r := c.Req.URL.Query().Get("r"); r != "" {
+			parsed, err := ParseRedirect(r)
+			if err != nil {
+				return err
+			}
+			redirect = parsed
+		}
+		state := &State{Dest: redirect}
 		c.Redirect(client.SignInURL(state))
 		return nil
 	}
