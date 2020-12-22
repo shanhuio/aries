@@ -129,20 +129,20 @@ func (m *Module) addProvider(r *aries.Router, p provider) {
 	c := p.client()
 	method := c.Method()
 	m.clients[method] = c
-	r.File(path.Join(method, "signin"), m.signInHandler(c))
-	r.File(path.Join(method, "callback"), m.callbackHandler(method, p))
+	r.Get(path.Join(method, "signin"), m.signInHandler(c))
+	r.Get(path.Join(method, "callback"), m.callbackHandler(method, p))
 }
 
 func (m *Module) router() *aries.Router {
 	r := aries.NewRouter()
 	if m.c.Bypass != "" {
-		r.File("signin-bypass", func(c *aries.C) error {
+		r.Get("signin-bypass", func(c *aries.C) error {
 			m.SetupCookie(c, m.c.Bypass)
 			c.Redirect(m.redirect)
 			return nil
 		})
 	}
-	r.File("signout", func(c *aries.C) error {
+	r.Get("signout", func(c *aries.C) error {
 		c.ClearCookie("session")
 		c.Redirect(m.redirect)
 		return nil
