@@ -27,14 +27,13 @@ const (
 	googleProfileScope = "https://www.googleapis.com/auth/userinfo.profile"
 )
 
-type google struct{ c *Client }
-
 // GoogleUserInfo stores a Google user's basic personal info.
 type GoogleUserInfo struct {
 	Email string `json:"email"`
 	Name  string `json:"name"`
 }
 
+// GetGoogleUserInfo queries Google OAuth endpoint for user info data.
 func GetGoogleUserInfo(
 	ctx context.Context, c *Client, tok *oauth2.Token,
 ) (*GoogleUserInfo, error) {
@@ -50,6 +49,8 @@ func GetGoogleUserInfo(
 
 	return user, nil
 }
+
+type google struct{ c *Client }
 
 func newGoogle(app *GoogleApp, s *signer.Sessions) *google {
 	scopeSet := make(map[string]bool)
