@@ -29,9 +29,26 @@ const (
 
 type google struct{ c *Client }
 
+// GoogleUserInfo stores a Google user's basic personal info.
 type GoogleUserInfo struct {
 	Email string `json:"email"`
 	Name  string `json:"name"`
+}
+
+func GetGoogleUserInfo(
+	ctx context.Context, c *Client, tok *oauth2.Token,
+) (*GoogleUserInfo, error) {
+	bs, err := c.Get(ctx, tok, "https://www.googleapis.com/oauth2/v3/userinfo")
+	if err != nil {
+		return nil, err
+	}
+
+	user := new(GoogleUserInfo)
+	if err := json.Unmarshal(bs, user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 func newGoogle(app *GoogleApp, s *signer.Sessions) *google {
@@ -59,29 +76,13 @@ func newGoogle(app *GoogleApp, s *signer.Sessions) *google {
 
 func (g *google) client() *Client { return g.c }
 
-func GetGoogleUserInfo(
-	c *Client, ctx context.Context, tok *oauth2.Token,
-) (*GoogleUserInfo, error) {
-	bs, err := c.Get(ctx, tok, "https://www.googleapis.com/oauth2/v3/userinfo")
-	if err != nil {
-		return nil, err
-	}
-
-	var user GoogleUserInfo
-	if err := json.Unmarshal(bs, &user); err != nil {
-		return nil, err
-	}
-
-	return &user, nil
-}
-
 func (g *google) callback(c *aries.C) (*UserMeta, *State, error) {
 	tok, state, err := g.c.TokenState(c)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	user, err := GetGoogleUserInfo(g.c, c.Context, tok)
+	user, err := GetGoogleUserInfo(c.Context, g.c, tok)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -44,7 +44,7 @@ type Config struct {
 func New(c *Config) *Mailman {
 	states := signer.NewSessions(c.StateKey, time.Minute*3)
 
-	var scopes = []string{
+	scopes := []string{
 		"https://www.googleapis.com/auth/gmail.send",
 		"https://www.googleapis.com/auth/userinfo.email",
 	}
@@ -150,7 +150,7 @@ func (m *Mailman) serveCallback(c *aries.C) error {
 	}
 
 	// Get user's email address.
-	user, err := oauth.GetGoogleUserInfo(m.client, c.Context, token)
+	user, err := oauth.GetGoogleUserInfo(c.Context, m.client, token)
 	if err != nil {
 		return err
 	}
