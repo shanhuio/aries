@@ -1,6 +1,7 @@
 package oauth
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -25,6 +26,29 @@ const (
 	googleEmailScope   = "https://www.googleapis.com/auth/userinfo.email"
 	googleProfileScope = "https://www.googleapis.com/auth/userinfo.profile"
 )
+
+// GoogleUserInfo stores a Google user's basic personal info.
+type GoogleUserInfo struct {
+	Email string `json:"email"`
+	Name  string `json:"name"`
+}
+
+// GetGoogleUserInfo queries Google OAuth endpoint for user info data.
+func GetGoogleUserInfo(
+	ctx context.Context, c *Client, tok *oauth2.Token,
+) (*GoogleUserInfo, error) {
+	bs, err := c.Get(ctx, tok, "https://www.googleapis.com/oauth2/v3/userinfo")
+	if err != nil {
+		return nil, err
+	}
+
+	user := new(GoogleUserInfo)
+	if err := json.Unmarshal(bs, user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
 
 type google struct{ c *Client }
 
@@ -59,19 +83,11 @@ func (g *google) callback(c *aries.C) (*UserMeta, *State, error) {
 		return nil, nil, err
 	}
 
-	const url = "https://www.googleapis.com/oauth2/v3/userinfo"
-	bs, err := g.c.Get(c.Context, tok, url)
+	user, err := GetGoogleUserInfo(c.Context, g.c, tok)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var user struct {
-		Email string `json:"email"`
-		Name  string `json:"name"`
-	}
-	if err := json.Unmarshal(bs, &user); err != nil {
-		return nil, nil, err
-	}
 	email := user.Email
 	if email == "" {
 		return nil, nil, fmt.Errorf("empty login")

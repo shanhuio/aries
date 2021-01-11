@@ -19,10 +19,10 @@ import (
 	"shanhu.io/misc/signer"
 )
 
-// Token is an interface that gets and fetches an OAuth2 refresh token.
-type Token interface {
-	Get(ctx context.Context) (*oauth2.Token, error)
-	Set(ctx context.Context, t *oauth2.Token) error
+// Tokens is an interface that gets and fetches an OAuth2 refresh token.
+type Tokens interface {
+	Get(ctx context.Context, email string) (*oauth2.Token, error)
+	Set(ctx context.Context, email string, t *oauth2.Token) error
 }
 
 // Mailman is a http server module for sending emails using gmail's
@@ -30,26 +30,28 @@ type Token interface {
 type Mailman struct {
 	config *oauth2.Config
 	client *oauth.Client
-	token  Token
+	tokens Tokens
 }
 
 // Config contains configuration for a mailman.
 type Config struct {
 	App      *oauth.GoogleApp
 	StateKey []byte
-	Token    Token
+	Tokens   Tokens
 }
 
 // New creates a new mailman.
 func New(c *Config) *Mailman {
 	states := signer.NewSessions(c.StateKey, time.Minute*3)
 
-	const gmailSendScope = "https://www.googleapis.com/auth/gmail.send"
-
+	scopes := []string{
+		"https://www.googleapis.com/auth/gmail.send",
+		"https://www.googleapis.com/auth/userinfo.email",
+	}
 	oc := &oauth2.Config{
 		ClientID:     c.App.ID,
 		ClientSecret: c.App.Secret,
-		Scopes:       []string{gmailSendScope},
+		Scopes:       scopes,
 		Endpoint:     goauth2.Endpoint,
 		RedirectURL:  c.App.RedirectURL,
 	}
@@ -57,7 +59,7 @@ func New(c *Config) *Mailman {
 	return &Mailman{
 		config: oc,
 		client: oauth.NewClient(oc, states, oauth.MethodGoogle),
-		token:  c.Token,
+		tokens: c.Tokens,
 	}
 }
 
@@ -70,7 +72,13 @@ func (m *Mailman) tokenState(c *aries.C) (*oauth2.Token, *oauth.State, error) {
 }
 
 func (m *Mailman) serveIndex(c *aries.C) error {
-	tok, err := m.token.Get(c.Context)
+	email := c.Req.URL.Query().Get("email")
+	if email == "" {
+		return errcode.InvalidArgf("email not specified in query")
+	}
+
+	// We simply take the first specified email parameter.
+	tok, err := m.tokens.Get(c.Context, email)
 	if err != nil {
 		if errcode.IsNotFound(err) {
 			return fmt.Errorf("mailman token not found")
@@ -81,8 +89,10 @@ func (m *Mailman) serveIndex(c *aries.C) error {
 }
 
 // Send sends an email. Needs to setup OAuth2 first.
-func (m *Mailman) Send(ctx context.Context, body []byte) (string, error) {
-	tok, err := m.token.Get(ctx)
+func (m *Mailman) Send(
+	ctx context.Context, from string, body []byte,
+) (string, error) {
+	tok, err := m.tokens.Get(ctx, from)
 	if err != nil {
 		if errcode.IsNotFound(err) {
 			return "", fmt.Errorf("mailman not setup yet")
@@ -121,11 +131,12 @@ func (m *Mailman) Send(ctx context.Context, body []byte) (string, error) {
 
 // SendRequest is an request for sending a mail.
 type SendRequest struct {
+	From string
 	Body []byte
 }
 
 func (m *Mailman) apiSend(c *aries.C, req *SendRequest) (string, error) {
-	return m.Send(c.Context, req.Body)
+	return m.Send(c.Context, req.From, req.Body)
 }
 
 func (m *Mailman) serveCallback(c *aries.C) error {
@@ -137,11 +148,24 @@ func (m *Mailman) serveCallback(c *aries.C) error {
 	if token.RefreshToken == "" {
 		return fmt.Errorf("refresh token empty")
 	}
-	if err := m.token.Set(c.Context, token); err != nil {
+
+	// Get user's email address.
+	user, err := oauth.GetGoogleUserInfo(c.Context, m.client, token)
+	if err != nil {
 		return err
 	}
 
-	c.Redirect(path.Dir(c.Path)) // redirect to index
+	if err := m.tokens.Set(c.Context, user.Email, token); err != nil {
+		return err
+	}
+
+	// redirect to index with email parameter
+	q := make(url.Values)
+	q.Set("email", user.Email)
+	c.Redirect((&url.URL{
+		Path:     path.Dir(c.Path),
+		RawQuery: q.Encode(),
+	}).String())
 	return nil
 }
 
