@@ -10,14 +10,12 @@ import (
 // DiscardURLServerParts discards the server parts of an URL,
 // including scheme, host, port and user info.
 func DiscardURLServerParts(u *url.URL) *url.URL {
-	return &url.URL{
-		Path:        u.Path,
-		RawPath:     u.RawPath,
-		ForceQuery:  u.ForceQuery,
-		RawQuery:    u.RawQuery,
-		Fragment:    u.Fragment,
-		RawFragment: u.RawFragment,
-	}
+	cp := *u
+	cp.Scheme = ""
+	cp.Opaque = ""
+	cp.User = nil
+	cp.Host = ""
+	return &cp
 }
 
 // ParseRedirect parses an in-site redirection URL.
