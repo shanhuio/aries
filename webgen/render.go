@@ -36,9 +36,13 @@ func RenderBody(w io.Writer, page *Page, body *Node) error {
 	doc := NewHTMLEnglish()
 	head := Head(NewMeta("charset", "UTF-8"))
 	if page.Title != "" {
-		head.Add(Title(page.Title))
+		if err := head.Add(Title(page.Title)); err != nil {
+			return err
+		}
 	}
-	doc.Add(head, body)
+	if err := doc.Add(head, body); err != nil {
+		return err
+	}
 
 	if err := html.Render(w, doc.Node); err != nil {
 		return err

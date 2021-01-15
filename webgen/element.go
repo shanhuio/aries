@@ -26,7 +26,9 @@ func Element(n interface{}, children ...interface{}) *Node {
 		panic(fmt.Sprintf("unknown element %T", n))
 	}
 
-	addChildren(ret, children...)
+	if err := addChildren(ret, children...); err != nil {
+		panic(err)
+	}
 	return &Node{ret}
 }
 
