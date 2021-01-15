@@ -65,4 +65,6 @@ var (
 	Ul = bind(atom.Ul)
 	Ol = bind(atom.Ol)
 	Li = bind(atom.Li)
+
+	Br = bind(atom.Br)
 )
