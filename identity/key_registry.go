@@ -117,7 +117,7 @@ func IsSimpleName(user string) bool {
 		if r >= '0' && r <= '9' {
 			continue
 		}
-		if r == '~' {
+		if r == '~' || r == '-' || r == '_' {
 			continue
 		}
 		return false
